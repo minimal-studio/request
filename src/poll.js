@@ -14,7 +14,7 @@
  *     }
  *   }
  * })
- * 
+ *
  * 使用方法
  *
  * 定义回调函数
@@ -56,8 +56,6 @@
  * 停止轮询
  * PollingEntity.stop()
  */
-
-const DataMap = window.DataMap || 'Data';
 
 export default class PollMethod {
   constructor(pollFreq = 2, pollMethod = 'poll') {
@@ -161,7 +159,7 @@ export default class PollMethod {
       }
     });
     this.$request.gameGate(_pollData, (res) => {
-      let data = res[DataMap];
+      let data = res.data;
       for (var dataKey in data) {
         let configMapped = configIdConfigMapper[dataKey];
         if(configMapped && configMapped.callback && typeof configMapped.callback == 'function') {

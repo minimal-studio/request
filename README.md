@@ -1,12 +1,11 @@
-## matrix request helper
-主要的请求封装函数，包含加密和压缩算法
+## orion request
+
+提供功能
+
+- 消息压缩
+- 消息加密
 
 #### 说明
-##### 统一 request 和测速的入口
-
-- request.js     请求函数
-- NetworkResSpeedTesterClass.js 测速函数
-- url_hash_helper.js 打开 hash window 的函数
 
 #### 用法
 
@@ -15,8 +14,6 @@ import {
   onRequest, NetworkResSpeedTesterClass, getSpeedColl,
   decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl
 } from 'orion-request';
-
-或者
 
 /**
  * main request helper
@@ -36,6 +33,60 @@ import {decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl} from 'orion-request
 let windowTargetObj = openWindowUseHashUrl(url, windowParamStr);
 let resultStr = decodeHashUrl();
 let wrapReqHashUrlStr = wrapReqHashUrl(url);
+```
+
+#### request 的必须配置例子
+
+```
+/**
+ * 设置必须的配置
+ */
+$request.setRequestConfig({
+  reqUrl: currReqUrl,
+  wallet: window.__none // 这个为隐秘的加密 key array
+});
+
+/**
+ * 设置 $request 对象的 res，处理具体业务
+ */
+function handleRes({resData, callback}) {
+  let errcode = resData.Header.ErrCode;
+  switch (errcode.Code) {
+    case '30003':
+    case '30024':
+    case '30039':
+      onLoginFail();
+      break;
+  }
+  callback(resData);
+}
+
+/**
+ * $request send data 前的 wrapper 函数
+ */
+$request.wrapDataBeforeSend = (options) => {
+  const {isCompress, method, data, params} = options;
+  return {
+    Header: Object.assign({}, getCommonHeader(), {
+      Compress: isCompress ? 1 : 0,
+      Method: method,
+    }, params),
+    Data: data
+  }
+}
+
+/**
+ * 当 $request 有相应时，返回
+ */
+$request.resDataFilter = (resData) => {
+  resData.data = resData.Data;
+  return resData;
+}
+
+/**
+ * 监听 $request res 处理函数
+ */
+$request.subscribeRes(handleRes);
 ```
 
 #### TODO

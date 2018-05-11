@@ -9,7 +9,7 @@ import {encryptFilter, decryptFilter} from './encrypt-helper';
 
 const canSetFields = [
   'reqUrl', 'compressLenLimit',
-  'reconnectTime', 'reqEntityHeader'
+  'reconnectTime', 'wallet'
 ];
 
 const headersMapper = {
@@ -24,7 +24,6 @@ class MatrixRequest {
     this.defaultConfig = {
       reqUrl: '',
       compressLenLimit: 2048,
-      reqEntityHeader: {},
       reconnectedCount: 0, // 记录连接状态
       reconnectTime: 30, // 重连次数, 默认重连五次, 五次都失败将调用
       connectState: 'ok',
@@ -68,12 +67,6 @@ class MatrixRequest {
     if(isFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
-  getDefaultReqUrl() {
-    return this.reqUrl || this.reqEntityHeader.reqUrl;
-
-    // 将要废弃的写法
-    // return this.reqUrl || this.reqEntityHeader.gateUrl || window.GATE_URL;
-  }
   setRequestConfig(config) {
     /**
      * 避免被设置其他字段
@@ -83,9 +76,6 @@ class MatrixRequest {
         this[configKey] = config[configKey];
       }
     });
-  }
-  setPostHeader(reqHeader = {}) {
-    this.reqEntityHeader = reqHeader;
   }
   resetReqHeader() {
     this.reqHeaders = {};
@@ -140,7 +130,7 @@ class MatrixRequest {
   reqDone(reqID) {
     delete this.reqQueue[reqID];
   }
-  _send({sendData, reqUrl = this.getDefaultReqUrl(), callback, wallet = this.wallet, onErr}) {
+  _send({sendData, reqUrl = this.reqUrl, callback, wallet = this.wallet, onErr}) {
     if(!reqUrl) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
 
     let self = this;
@@ -183,7 +173,10 @@ class MatrixRequest {
                 })
               });
           } else {
-            // console.log();
+            self.onRes({
+              resData: resDataFilterRes,
+              callback
+            })
           }
           self.reqDone(reqID);
         })
@@ -214,12 +207,12 @@ class MatrixRequest {
       send.call(this, encryptDataResult);
     });
   }
-  gameGate(sendData, callback, onErr, reqUrl, encryptKeyArray = window.__none) {
+  gameGate(sendData, callback, onErr, reqUrl) {
     this._send({
       sendData: sendData,
       reqUrl: reqUrl,
       callback: callback,
-      wallet: encryptKeyArray,
+      wallet: this.wallet,
       onErr: onErr
     });
   }
