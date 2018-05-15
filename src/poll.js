@@ -92,7 +92,7 @@ export default class PollMethod {
   start() {
     if(!this.isStarted && this.checkConfig()) {
       this.pollTime = 1;
-      this.setTiming();
+      this.startPolling();
       this.isStarted = true;
     }
   }
@@ -127,17 +127,24 @@ export default class PollMethod {
     let keyArr = Array.isArray(key) ? key : [key];
     keyArr.forEach(item => delete this.pollDataSet[item]);
   }
-  setTiming() {
+  startPolling() {
+    // let self = this;
+    // this.timer = setTimeout(() => {
+    //   self.startPolling();
+    // }, this.pollFreq);
+    this.polling();
+  }
+  loopPollWhenReqDone() {
+    if(!this.isStarted) return;
     let self = this;
     this.timer = setTimeout(() => {
-      self.setTiming();
+      self.polling();
     }, this.pollFreq);
-    this.polling();
-    this.pollTime += 1;
   }
   _wrapPollData() {
     let allPollConfig = [];
     let configIdConfigMapper = {};
+    this.pollTime += 1;
     for (var configID in this.pollDataSet) {
       let currConfig = this.pollDataSet[configID];
       let currData = currConfig.getData();
@@ -171,6 +178,7 @@ export default class PollMethod {
           });
         }
       }
+      self.loopPollWhenReqDone();
     }, null, this.pollUrl);
   }
   stop() {
