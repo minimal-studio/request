@@ -68,7 +68,7 @@ export class GateResSpeedTesterClass {
     if(!isUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
-  _request(gate, idx) {
+  async _request(gate, idx) {
     let url = `${gate}/x`;
     let startTime = Date.now();
 
@@ -76,29 +76,29 @@ export class GateResSpeedTesterClass {
     let fastestIdx = 0;
     let fastestTime = 1000;
 
-    $request.get(url, (res) => {
-      let endTime = Date.now() - startTime;
-      if(!res || res.status != 200) {
-        endTime = -1;
-      } else if (endTime < fastestTime){
-        fastestTime = endTime;
-        fastestIdx = idx;
+    let isSuccess = await $request.get(url);
+    let endTime = Date.now() - startTime;
+
+    if(!isSuccess) {
+      endTime = -1;
+    } else if (endTime < fastestTime){
+      fastestTime = endTime;
+      fastestIdx = idx;
+    }
+    this.testRes[idx] = {
+      url: url,
+      originUrl: gate,
+      t: endTime
+    };
+    self.delayExec.exec(() => {
+      let result = {testRes: this.testRes, fastestIdx};
+      callFunc(self.onRes)(result);
+      self.testResult.push(result);
+      window.localStorage.setItem('FASTEST_GATE', self.targetURLS[fastestIdx]);
+      if(Object.keys(this.testRes).length === self.targetURLS.length) {
+        // test finished
+        callFunc(self.onEnd)(result);
       }
-      this.testRes[idx] = {
-        url: url,
-        originUrl: gate,
-        t: endTime
-      };
-      self.delayExec.exec(() => {
-        let result = {testRes: this.testRes, fastestIdx};
-        callFunc(self.onRes)(result);
-        self.testResult.push(result);
-        window.localStorage.setItem('FASTEST_GATE', self.targetURLS[fastestIdx]);
-        if(Object.keys(this.testRes).length === self.targetURLS.length) {
-          // test finished
-          callFunc(self.onEnd)(result);
-        }
-      }, 300);
-    });
+    }, 300);
   }
 }

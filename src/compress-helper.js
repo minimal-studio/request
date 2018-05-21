@@ -2,20 +2,20 @@ import LZMA from './lzma_worker-min';
 
 export function compressFilter({data, compressLenLimit = 2048}) {
   return new Promise((resolve, reject) => {
-    let result = {
+    let resultObj = {
       isCompress: false,
       data,
     }
     let strPostData = JSON.stringify(data);
 
     if(strPostData.length > compressLenLimit) {
-      result.isCompress = true;
-      LZMA.compress(JSON.stringify(data), 1, (result) => {
-        result.data = convertToFormatedHex(result).toString();
-        resolve(result);
+      resultObj.isCompress = true;
+      LZMA.compress(JSON.stringify(data), 1, (decompressResult) => {
+        resultObj.data = convertToFormatedHex(decompressResult).toString();
+        resolve(resultObj);
       });
     } else {
-      resolve(result);
+      resolve(resultObj);
     }
   });
 }
@@ -38,11 +38,13 @@ export function decompressFilter(data) {
     }
   });
 }
+
 function convertFormatedHexToBytes(hex) {
   for (var bytes = [], c = 0; c < hex.length; c += 2)
   bytes.push(parseInt(hex.substr(c, 2), 16));
   return bytes;
 }
+
 function convertToFormatedHex(byteArr) {
   if (byteArr.length === 0) return false;
   let hexStr = "";

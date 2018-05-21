@@ -155,7 +155,7 @@ export default class PollMethod {
     }
     return {allPollConfig, configIdConfigMapper};
   }
-  polling() {
+  async polling() {
     const self = this;
     const pollDataParams = this._wrapPollData(); // 获取轮询的参数
     const {allPollConfig, configIdConfigMapper} = pollDataParams;
@@ -165,21 +165,22 @@ export default class PollMethod {
         Params: allPollConfig
       }
     });
-    this.$request.gameGate(_pollData, (res) => {
-      let data = res.data;
-      for (var dataKey in data) {
-        let configMapped = configIdConfigMapper[dataKey];
-        if(configMapped && configMapped.callback && typeof configMapped.callback == 'function') {
-          configMapped.callback({
-            resData: data[dataKey],
-            api: dataKey,
-            id: configMapped.id,
-            config: configMapped
-          });
-        }
+    const sendResData = await this.$request.send({
+      sendData: _pollData, reqUrl: this.pollUrl
+    });
+    let data = sendResData.data;
+    for (var dataKey in data) {
+      let configMapped = configIdConfigMapper[dataKey];
+      if(configMapped && configMapped.callback && typeof configMapped.callback == 'function') {
+        configMapped.callback({
+          resData: data[dataKey],
+          api: dataKey,
+          id: configMapped.id,
+          config: configMapped
+        });
       }
-      self.loopPollWhenReqDone();
-    }, null, this.pollUrl);
+    }
+    this.loopPollWhenReqDone();
   }
   stop() {
     if (this.timer) clearTimeout(this.timer);

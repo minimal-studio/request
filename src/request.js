@@ -17,7 +17,46 @@ const headersMapper = {
   html: {'Content-Type': 'text/html'}
 }
 
-class MatrixRequest {
+async function getCompressAndEnctyptDataAsync({
+  targetData = {}, originData, compressLenLimit, beforeEncryptHook, wallet
+}) {
+  /**
+   * wrap send data step
+   * 1. 压缩 filter
+   * 2. 加密 filter
+   */
+  const compressedData = await compressFilter({
+    data: targetData,
+    compressLenLimit,
+  });
+  let runningData = Object.assign({}, originData, compressedData);
+  // do encrypt filter before send, get the wrap data from outside setting.
+  let wrapedData = beforeEncryptHook(runningData);
+  let encryptDataResult = encryptFilter({
+    data: wrapedData,
+    wallet: wallet,
+  });
+
+  return encryptDataResult;
+}
+
+async function getDecompressAndDectyptDataAsync({
+  targetData = {}, originData, compressLenLimit, beforeEncryptHook, wallet
+}) {
+  /*
+  * handle res data step
+  * 1. 解密
+  * 2. 解压
+  */
+
+  return encryptDataResult;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+class OrionRequestClass {
   constructor(config) {
     const self = this;
 
@@ -48,9 +87,9 @@ class MatrixRequest {
     // console.log('请配置 onRes');
     this.eventEmitter.emit(this.resMark, res);
   } // 请求完成的 callback
-  resDataFilter(resData) {
+  setResDataHook(resData) {
     // 可以重写，用于做 resData 的业务处理
-    console.log('set [$request.resDataFilter = func] first');
+    console.log('set [$request.setResDataHook = func] first');
     return resData;
   }
   subscribeRes(func) {
@@ -60,10 +99,10 @@ class MatrixRequest {
     this.eventEmitter.unsubscribe(this.resMark, func);
   }
   onErr() {console.log('请配置 onErr')} // 请求失败的 callback
-  /**
-   * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
-   */
   _wrapDataBeforeSend(targetData) {
+    /**
+     * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
+     */
     if(isFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
@@ -77,32 +116,37 @@ class MatrixRequest {
       }
     });
   }
-  resetReqHeader() {
-    this.reqHeaders = {};
+  async get(url) {
+    const getResult = await fetch(url);
+    let result;
+    if(this.checkResStatus(getResult)) {
+      result = await getResult.text();
+    } else {
+      result = false;
+    }
+    return result;
   }
-  get(url, callback) {
-    return fetch(url, {
-      // headers: this.reqHeaders,
-      method: 'GET'
-    })
-    .then((res) => {
-      callFunc(callback)(res);
-      if(res.status == 200) return res.text();
-    })
-    // .then(resTxt => callFunc(callback)(resTxt))
-    .catch(e => {
-      callFunc(callback)(false);
+  async post(url, postData, isEncrypt = false) {
+    let headers = isEncrypt ? headersMapper.html : headersMapper.js;
+    let fetchOptions = {
+      method: "POST",
+      headers: headers,
+      body: isEncrypt ? postData : JSON.stringify(postData)
+    };
+    let result = null;
+    try {
+      let fetchRes = await fetch(url, fetchOptions);
+      if(this.checkResStatus(fetchRes)) {
+        const resData = await fetchRes.text();
+        result = resData;
+      }
+    } catch(e) {
       console.log(e);
-    });
+    }
+    return result;
   }
-  post(url, postData, callback) {
-    fetch(url, {
-      headers: this.reqHeaders,
-      method: 'POST',
-      body: postData
-    }).then((res) => {
-      callFunc(callback)(res);
-    });
+  checkResStatus({status}) {
+    return status == 200;
   }
   changeNetworkState(state) {
     if(state == this.connectState) return;
@@ -112,7 +156,7 @@ class MatrixRequest {
     this.connectState = state;
   }
   // 轮询消息会不断发, 不需要重发消息
-  reconnect(postData, sendURL, callback) {
+  reconnect() {
     this.changeNetworkState('tryToConnecting');
 
     if(!!this.timer) clearTimeout(this.timer);
@@ -127,98 +171,54 @@ class MatrixRequest {
 
     this.reconnectedCount++;
   }
-  reqDone(reqID) {
-    delete this.reqQueue[reqID];
-  }
-  _send({sendData, reqUrl = this.reqUrl, callback, wallet = this.wallet, onErr}) {
+  async send({sendData, reqUrl = this.reqUrl, wallet = this.wallet, onErr}) {
     if(!reqUrl) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
 
-    let self = this;
-
-    function send(_sendData) {
-      let isEncrypt = !!wallet;
-      let headers = isEncrypt ? headersMapper.html : headersMapper.js;
-      let reqID = generteID();
-
-      let postEntity = {
-        method: "POST",
-        headers: headers,
-        body: isEncrypt ? _sendData : JSON.stringify(_sendData)
-      };
-
-      this.reqQueue[reqID] = fetch(reqUrl, postEntity)
-        .then(res => {
-          if(res.status == 200) {
-            return res.text();
-          } else {
-            this.reconnect(_sendData, reqUrl, callback);
-          }
-        })
-        .then(resTxt => {
-          /**
-           * handle res data step
-           * 1. 解密
-           * 2. 解压
-           */
-          let decryptData = decryptFilter({data: resTxt, wallet});
-          let resDataFilterRes = this.resDataFilter(decryptData, callback);
-          if(resDataFilterRes.data) {
-            self.changeNetworkState('ok');
-            decompressFilter(resDataFilterRes.data)
-              .then(decomResData => {
-                resDataFilterRes.data = decomResData;
-                self.onRes({
-                  resData: resDataFilterRes,
-                  callback
-                })
-              });
-          } else {
-            self.onRes({
-              resData: resDataFilterRes,
-              callback
-            })
-          }
-          self.reqDone(reqID);
-        })
-        .catch(err => {
-          console.log(`send data fail. url: ${reqUrl}, desc: ${err}.`);
-          callFunc(onErr)(err);
-          callFunc(self.onErr)(err);
-          self.reqDone(reqID);
-        });
-    }
-
-    /**
-     * wrap send data step
-     * 1. 压缩 filter
-     * 2. 加密 filter
-     */
-    compressFilter({
-      data: sendData.data || sendData.Data,
+    const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
+      targetData: sendData.data || sendData.Data,
+      originData: sendData,
       compressLenLimit: this.compressLenLimit,
-    }).then(compressFilterData => {
-      let runningData = Object.assign({}, sendData, compressFilterData);
-      // do encrypt filter before send, get the wrap data from outside setting.
-      let wrapedData = this._wrapDataBeforeSend(runningData);
-      let encryptDataResult = encryptFilter({
-        data: wrapedData,
-        wallet: wallet,
-      });
-      send.call(this, encryptDataResult);
+      beforeEncryptHook: this._wrapDataBeforeSend.bind(this),
+      wallet
     });
+
+    const postResData = await this.post(reqUrl, sendDataFilterResult, !!wallet);
+
+    if(postResData) {
+      let decryptData = decryptFilter({data: postResData, wallet});
+      let dataFilterRes = this.setResDataHook(decryptData);
+
+      if(dataFilterRes.data) {
+        this.changeNetworkState('ok');
+        const decomResData = await decompressFilter(dataFilterRes.data);
+        dataFilterRes.data = decomResData;
+      } else {
+        console.log('need set data for res data');
+      }
+      this.onRes({
+        resData: dataFilterRes,
+      });
+
+      return dataFilterRes;
+    } else {
+      this.reconnect();
+
+      callFunc(onErr)('network error');
+
+      return false;
+    }
   }
-  gameGate(sendData, callback, onErr, reqUrl) {
-    this._send({
+  async gameGate(sendData, callback, onErr, reqUrl) {
+    const sendDataRes = await this.send({
       sendData: sendData,
       reqUrl: reqUrl,
-      callback: callback,
       wallet: this.wallet,
-      onErr: onErr
     });
+    callback && callback(sendDataRes);
   }
 }
-const $request = new MatrixRequest();
+const $request = new OrionRequestClass();
 
 export {
-  $request, MatrixRequest
+  $request, OrionRequestClass
 };
