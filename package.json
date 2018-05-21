@@ -2,10 +2,6 @@
   "name": "orion-request",
   "version": "2.1.1",
   "description": "",
-  "main": "dist/index.js",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "publish": "npm publish ./build",
     "release": "npm run build; npm run publish",
