@@ -3,7 +3,7 @@
  */
 
 import {$request} from './request';
-import {callFunc, DebounceClass, isUrl, random} from 'basic-helper';
+import {CallFunc, DebounceClass, IsUrl, Random} from 'basic-helper';
 
 export class GateResSpeedTesterClass {
   constructor() {
@@ -62,10 +62,10 @@ export class GateResSpeedTesterClass {
   getRandomURL() {
     if(!this.checkConfig()) return;
     function _g() {
-      return this.targetURLS[random([0, this.targetURLS.length - 1])];
+      return this.targetURLS[Random([0, this.targetURLS.length - 1])];
     }
     let __r = _g.call(this);
-    if(!isUrl(__r)) __r = this.getRandomURL.call(this);
+    if(!IsUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
   async _request(gate, idx) {
@@ -92,12 +92,12 @@ export class GateResSpeedTesterClass {
     };
     self.delayExec.exec(() => {
       let result = {testRes: this.testRes, fastestIdx};
-      callFunc(self.onRes)(result);
+      CallFunc(self.onRes)(result);
       self.testResult.push(result);
       window.localStorage.setItem('FASTEST_GATE', self.targetURLS[fastestIdx]);
       if(Object.keys(this.testRes).length === self.targetURLS.length) {
         // test finished
-        callFunc(self.onEnd)(result);
+        CallFunc(self.onEnd)(result);
       }
     }, 300);
   }

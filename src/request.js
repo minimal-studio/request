@@ -3,13 +3,13 @@
  * 1. 网络请求错误的处理机制
  * 2. 不再处理业务，业务在外部进行处理
  */
-import {callFunc, isFunc, generteID, EventEmitterClass} from 'basic-helper';
+import {CallFunc, IsFunc, EventEmitterClass} from 'basic-helper';
 import {compressFilter, decompressFilter} from './compress-helper';
 import {encryptFilter, decryptFilter} from './encrypt-helper';
 
 const canSetFields = [
   'reqUrl', 'compressLenLimit',
-  'reconnectTime', 'wallet'
+  'reconnectTime', 'wallet', 'reqHeader'
 ];
 
 const headersMapper = {
@@ -69,6 +69,7 @@ class OrionRequestClass {
       req: null,
       reqQueue: {},
       wallet: '',
+      reqHeader: {},
       resMark: 'ON_REQ_RES'
       // 请求回调不在处理业务，请设置对应的业务回调处理
     };
@@ -98,12 +99,12 @@ class OrionRequestClass {
   unsubscribeRes(func) {
     this.eventEmitter.unsubscribe(this.resMark, func);
   }
-  onErr() {console.log('请配置 onErr')} // 请求失败的 callback
+  onErr() {console.log('need set onErr')} // 网络错误
   _wrapDataBeforeSend(targetData) {
     /**
      * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
      */
-    if(isFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
+    if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
   setRequestConfig(config) {
@@ -130,7 +131,7 @@ class OrionRequestClass {
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
       method: "POST",
-      headers: headers,
+      headers: Object.assign({}, headers, this.reqHeader),
       body: isEncrypt ? postData : JSON.stringify(postData)
     };
     let result = null;
@@ -142,6 +143,7 @@ class OrionRequestClass {
       }
     } catch(e) {
       console.log(e);
+      this.onErr();
     }
     return result;
   }
@@ -203,7 +205,7 @@ class OrionRequestClass {
     } else {
       this.reconnect();
 
-      callFunc(onErr)('network error');
+      CallFunc(onErr)('network error');
 
       return false;
     }
