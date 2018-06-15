@@ -15,6 +15,7 @@ export class GateResSpeedTesterClass {
     this.testResult = [];
     this.targetURLS = [];
     this.testRes = {};
+    this.suffix = '';
   }
   getTestResult() {
     return this.testResult;
@@ -27,8 +28,9 @@ export class GateResSpeedTesterClass {
 
     let tempIdx = 0;
     function loopReq(idx) {
-      let gate = this.targetURLS[idx];
-      self._request.call(this, gate, idx);
+      let originUrl = this.targetURLS[idx];
+      let gate = originUrl + this.suffix;
+      self._request.call(this, gate, originUrl, idx);
       let nextIdx = idx += 1;
       if(nextIdx >= this.targetURLS.length) return;
       setTimeout(() => {
@@ -39,8 +41,9 @@ export class GateResSpeedTesterClass {
 
     return self;
   }
-  setConfig({gateUrls}) {
+  setConfig({gateUrls, suffix}) {
     this.targetURLS = gateUrls;
+    this.suffix = suffix;
   }
   getFastestGate() {
     return window.localStorage.getItem('FASTEST_GATE') || this.getRandomURL();
@@ -68,8 +71,7 @@ export class GateResSpeedTesterClass {
     if(!IsUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
-  async _request(gate, idx) {
-    let url = `${gate}/x`;
+  async _request(url, originUrl, idx) {
     let startTime = Date.now();
 
     let self = this;
@@ -87,7 +89,7 @@ export class GateResSpeedTesterClass {
     }
     this.testRes[idx] = {
       url: url,
-      originUrl: gate,
+      originUrl,
       t: endTime
     };
     self.delayExec.exec(() => {
