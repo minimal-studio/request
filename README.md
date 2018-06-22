@@ -9,7 +9,7 @@
 
 #### 用法
 
-```
+```js
 import {
   onRequest, NetworkResSpeedTesterClass, getSpeedColl,
   decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl
@@ -35,15 +35,36 @@ let resultStr = decodeHashUrl();
 let wrapReqHashUrlStr = wrapReqHashUrl(url);
 ```
 
-#### request 的必须配置例子
+#### request 的配置例子
 
-```
+一般写在 req-filter.js 中，作为 request 的过滤
+
+```js
+/**
+ * 如果是通过 hash URL 的项目
+ */
+
+import {$request, decodeHashUrl} from 'orion-request';
+
+/** 第一个参数为需要解析的参数名称，第二个为是否把他序列化为对象
+ * 结构
+ * hashSearched = {
+    reqUrl: '',
+    SessId: '',
+    UserName: '',
+    Platform: '',
+    Device: '',
+    __none: ''
+  }
+ */
+let hashSearched = decodeHashUrl('req', true);
+
 /**
  * 设置必须的配置
  */
 $request.setRequestConfig({
-  reqUrl: currReqUrl,
-  wallet: window.__none // 这个为隐秘的加密 key array
+  reqUrl: hashSearched.reqUrl || reqUrl,
+  wallet: hashSearched.__none || window.__none // 这个为隐秘的加密 key array
 });
 
 /**
@@ -87,6 +108,10 @@ $request.resDataFilter = (resData) => {
  * 监听 $request res 处理函数
  */
 $request.subscribeRes(handleRes);
+
+export {
+  $request
+}
 ```
 
 #### TODO
