@@ -173,7 +173,7 @@ class OrionRequestClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, reqUrl = this.reqUrl, wallet = this.wallet, onErr}) {
+  async send({sendData, reqUrl = this.reqUrl, wallet = this.wallet, onRes, onErr}) {
     if(!reqUrl) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
 
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
@@ -192,14 +192,15 @@ class OrionRequestClass {
 
       if(dataFilterRes.data) {
         this.changeNetworkState('ok');
-        const decomResData = await decompressFilter(dataFilterRes.data);
-        dataFilterRes.data = decomResData;
+        const decomResData = dataFilterRes.isCompress ? await decompressFilter(dataFilterRes.data) : dataFilterRes.data;
+        dataFilterRes.data = dataFilterRes.Data = decomResData;
       } else {
         console.log('need set data for res data');
       }
       this.onRes({
         resData: dataFilterRes,
       });
+      CallFunc(onRes)();
 
       return dataFilterRes;
     } else {
