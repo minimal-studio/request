@@ -3,7 +3,7 @@
  */
 
 import {$request} from './request';
-import {CallFunc, DebounceClass, IsUrl, Random} from 'basic-helper';
+import {CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass} from 'basic-helper';
 
 export class GateResSpeedTesterClass {
   constructor() {
@@ -16,12 +16,35 @@ export class GateResSpeedTesterClass {
     this.targetURLS = [];
     this.testRes = {};
     this.suffix = '';
+    this.resMark = 'ON_REQ_RES';
+    this.resDoneMark = 'ON_REQ_DONE_RES';
+    this.fastestTime = 1000;
+    this.fastestIdx = -1;
+
+    this.eventEmitter = new EventEmitterClass();
   }
   getTestResult() {
     return this.testResult;
   }
+  // subscribeRes(func) {
+  //   this.eventEmitter.subscribe(this.resMark, func);
+  // }
+  // unsubscribeRes(func) {
+  //   this.eventEmitter.unsubscribe(this.resMark, func);
+  // }
+  // subscribeResDone(func) {
+  //   this.eventEmitter.subscribe(this.resDoneMark, func);
+  // }
+  // unsubscribeResDone(func) {
+  //   this.eventEmitter.unsubscribe(this.resDoneMark, func);
+  // }
+  resetParams() {
+    this.fastestTime = 1000;
+    this.fastestIdx = -1;
+  }
   test() {
     if(!this.checkConfig()) return;
+    this.resetParams();
     this.testResult = [];
 
     let self = this;
@@ -75,17 +98,15 @@ export class GateResSpeedTesterClass {
     let startTime = Date.now();
 
     let self = this;
-    let fastestIdx = 0;
-    let fastestTime = 1000;
 
     let isSuccess = await $request.get(url);
     let endTime = Date.now() - startTime;
 
     if(!isSuccess) {
       endTime = -1;
-    } else if (endTime < fastestTime){
-      fastestTime = endTime;
-      fastestIdx = idx;
+    } else if (endTime < this.fastestTime) {
+      this.fastestTime = endTime;
+      this.fastestIdx = idx;
     }
     this.testRes[idx] = {
       url: url,
@@ -93,14 +114,14 @@ export class GateResSpeedTesterClass {
       t: endTime
     };
     self.delayExec.exec(() => {
-      let result = {testRes: this.testRes, fastestIdx};
-      CallFunc(self.onRes)(result);
-      self.testResult.push(result);
-      window.localStorage.setItem('FASTEST_GATE', self.targetURLS[fastestIdx]);
-      if(Object.keys(this.testRes).length === self.targetURLS.length) {
+      let delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
+      CallFunc(this.onRes)(delayResult);
+      self.testResult.push(delayResult);
+      window.localStorage.setItem('FASTEST_GATE', self.targetURLS[this.fastestIdx]);
+      if(self.testResult.length === self.targetURLS.length) {
         // test finished
-        CallFunc(self.onEnd)(result);
+        CallFunc(self.onEnd)(delayResult);
       }
-    }, 300);
+    }, 100);
   }
 }
