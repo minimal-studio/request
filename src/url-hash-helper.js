@@ -2,6 +2,18 @@
  * 通过hash url的方式把对应的参数传给新打开的页面
  */
 
+export function getUrlParams(key) {
+  // let searchs = 'http://localhost:3030/#/BANK'.split('?')[1];
+  let searchs = window.location.href.split('?')[1];
+  let resultObj = {};
+  if(!searchs) return {};
+  let params = searchs.split(/&+/);
+  params.forEach(item => {
+    let [key, val] = item.split('=');
+    resultObj[key] = val;
+  });
+  return key ? resultObj[key] : resultObj;
+}
 export function searchUrlParams(searchStr) {
   return window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(searchStr).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1");
 }
