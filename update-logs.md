@@ -1,4 +1,14 @@
-# 1.2.*
+# update logs
+
+## 2.1.9
+
+- 新增一个 searchUrlParams 接口，用于分析网页的参数
+
+## 2.*
+
+全新的结构，完全分离业务的实现
+
+## 1.2.*
 
 - export matrixRequest 对象，是一个类库，可以通过 new 的方式创造单独运行的 object
 - 新增 api setRequestConfig，设置对于的 reqUel，加密 key，压缩限制

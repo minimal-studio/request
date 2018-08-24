@@ -2,8 +2,12 @@
  * 通过hash url的方式把对应的参数传给新打开的页面
  */
 
+export function searchUrlParams(searchStr) {
+  return window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(searchStr).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1");
+}
+
 export function decodeHashUrl(sVar, isParse = false) {
-  let decryptData = (window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+  let decryptData = searchUrlParams(sVar);
   let decryResult = unbase64Str(decryptData);
   let result = decryResult;
   if(isParse) {
