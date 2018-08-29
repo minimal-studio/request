@@ -5,7 +5,7 @@
 - 消息压缩
 - 消息加密
 
-## 引用
+## 引用方式
 
 ```js
 import {
@@ -222,4 +222,4 @@ const $request = new OrionRequestClass();
 
 ## TODO
 
-- 完善 testing 单元测试，需要把所有功能都认真测试一遍
+- 完善测试用例
