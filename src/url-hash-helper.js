@@ -14,13 +14,14 @@ export function getUrlParams(key) {
   });
   return key ? resultObj[key] : resultObj;
 }
+
 export function searchUrlParams(searchStr) {
   return window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(searchStr).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1");
 }
 
 export function decodeHashUrl(sVar, isParse = false) {
   let decryptData = searchUrlParams(sVar);
-  let decryResult = unbase64Str(decryptData);
+  let decryResult = fromBase64Str(decryptData);
   let result = decryResult;
   if(isParse) {
     try {
@@ -44,17 +45,17 @@ export function wrapReqHashUrl({url, params}) {
           console.log(e)
         }
       }
-      resultHash += `${param}=${base64Str(val)}&`;
+      resultHash += `${param}=${toBase64Str(val)}&`;
     }
   }
   return url + resultHash;
 }
 
-export function base64Str(str) {
+export function toBase64Str(str) {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-export function unbase64Str(str) {
+export function fromBase64Str(str) {
   return decodeURIComponent(escape(atob(str)));
 }
 
