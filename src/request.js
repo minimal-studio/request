@@ -3,7 +3,7 @@
  * 1. 网络请求错误的处理机制
  * 2. 不再处理业务，业务在外部进行处理
  */
-import {CallFunc, IsFunc, EventEmitterClass} from 'basic-helper';
+import {CallFunc, IsFunc, HasValue, EventEmitterClass} from 'basic-helper';
 import {compressFilter, decompressFilter} from './compress-helper';
 import {encryptFilter, decryptFilter} from './encrypt-helper';
 
@@ -190,7 +190,7 @@ class OrionRequestClass {
       let decryptData = decryptFilter({data: postResData, wallet});
       let dataFilterRes = this.setResDataHook(decryptData);
 
-      if(dataFilterRes.data) {
+      if(HasValue(dataFilterRes.data)) {
         this.changeNetworkState('ok');
         const decomResData = dataFilterRes.isCompress ? await decompressFilter(dataFilterRes.data) : dataFilterRes.data;
         dataFilterRes.data = dataFilterRes.Data = decomResData;
