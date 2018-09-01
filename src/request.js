@@ -52,9 +52,7 @@ async function getDecompressAndDectyptDataAsync({
   return encryptDataResult;
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+if(process.env.NODE_ENV == 'development') window.decryptFilter = decryptFilter;
 
 class OrionRequestClass {
   constructor(config) {

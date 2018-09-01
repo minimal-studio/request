@@ -33,7 +33,7 @@ export function decodeHashUrl(sVar, isParse = false) {
   return result;
 }
 
-export function wrapReqHashUrl({url, params}) {
+export function wrapReqHashUrl({url, params, toBase64 = true}) {
   let resultHash = '?';
   for (var param in params) {
     if (params.hasOwnProperty(param)) {
@@ -45,7 +45,7 @@ export function wrapReqHashUrl({url, params}) {
           console.log(e)
         }
       }
-      resultHash += `${param}=${toBase64Str(val)}&`;
+      resultHash += `${param}=${toBase64 ? toBase64Str(val): val}&`;
     }
   }
   return url + resultHash;
