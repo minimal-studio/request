@@ -1,6 +1,7 @@
 /**
  * 通过hash url的方式把对应的参数传给新打开的页面
  */
+import {HasValue} from 'basic-helper';
 
 export function getUrlParams(key) {
   // let searchs = 'http://localhost:3030/#/BANK'.split('?')[1];
@@ -38,7 +39,7 @@ export function wrapReqHashUrl({url, params, toBase64 = true}) {
   for (var param in params) {
     if (params.hasOwnProperty(param)) {
       let val = params[param];
-      if(!val) continue;
+      if(!HasValue(val)) continue;
       if(typeof val == 'object') {
         try {
           val = JSON.stringify(val);
@@ -51,6 +52,15 @@ export function wrapReqHashUrl({url, params, toBase64 = true}) {
   }
   return url + resultHash;
 }
+
+// console.log(wrapReqHashUrl({
+//   url: '123',
+//   params: {
+//     req: 123,
+//     qwe: 0,
+//     tqw: null
+//   }
+// }))
 
 export function toBase64Str(str) {
   return btoa(unescape(encodeURIComponent(str)));
