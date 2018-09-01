@@ -1,6 +1,6 @@
 {
   "name": "orion-request",
-  "version": "2.1.13",
+  "version": "2.1.14",
   "description": "",
   "scripts": {
     "publish": "npm publish ./build",

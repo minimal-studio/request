@@ -38,6 +38,7 @@ export function wrapReqHashUrl({url, params, toBase64 = true}) {
   for (var param in params) {
     if (params.hasOwnProperty(param)) {
       let val = params[param];
+      if(!val) continue;
       if(typeof val == 'object') {
         try {
           val = JSON.stringify(val);
