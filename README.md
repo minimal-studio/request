@@ -1,12 +1,39 @@
-# Orion Request
+# Uke Fetch
 
-## 拥有的能力
+基于原生 fetch 功能的拓展封装库
 
+## 提供的能力
+
+- 与原生 fetch 相同的用法
 - 消息压缩，使用 lzma 压缩算法
 - 消息加密，使用 RC4 加密算法
 - 域名测速器
 - 浏览器域名的解析器，包括 hash base64 转码解码
 - 简易轮询辅助函数
+
+## 一般使用
+
+```js
+import { UkeFetchClass } from 'uke-fetch';
+let $req = new UkeFetchClass();
+
+// get, 同 fetch，并且自动根据 res 的 contentType 返回对应的数据类型
+let res = await $req.get(url, options);
+
+// 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
+let options = {
+  method: ''
+}
+let res = await $req.req(url, sendData, options)
+```
+
+## 数据加密
+
+TODO
+
+## 数据压缩
+
+TODO
 
 ## 引用方式
 
@@ -14,11 +41,11 @@
 
 ```js
 import {
-  $request, OrionRequestClass, PollClass,
+  $request, UkeFetchClass, PollClass,
   GateResSpeedTesterClass,
   decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl,
   getUrlParams, searchUrlParams, toBase64Str, fromBase64Str
-} from 'orion-request';
+} from 'uke-fetch';
 ```
 
 独立文件引用
@@ -27,17 +54,17 @@ import {
 /**
  * main request helper
  */
-import { $request } from 'orion-request/request.js';
+import { $request } from 'uke-fetch/request.js';
 
 /**
  * simple GateResSpeedTesterClass component
  */
-import { GateResSpeedTesterClass, getSpeedColl } from 'orion-request/network-res-speed-tester.js';
+import { GateResSpeedTesterClass, getSpeedColl } from 'uke-fetch/network-res-speed-tester.js';
 
 /**
  * 用于把 request 的 header base64 ，并且通过 window open 的方式打开，同时提供获取对应的路由的解密函数
  */
-import { decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl } from 'orion-request/url-hash-helper.js';
+import { decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl } from 'uke-fetch/url-hash-helper.js';
 
 let windowTargetObj = openWindowUseHashUrl(url, windowParamStr);
 let resultStr = decodeHashUrl();

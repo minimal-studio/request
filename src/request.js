@@ -62,10 +62,8 @@ function isResJson(res) {
   return /json/.test(getContentType(res));
 }
 
-class OrionRequestClass {
+class UkeFetchClass {
   constructor(config) {
-    const self = this;
-
     this.defaultConfig = {
       reqUrl: '',
       compressLenLimit: 2048,
@@ -135,12 +133,14 @@ class OrionRequestClass {
     }
     return result;
   }
-  async post(url, postData, isEncrypt = false, method = 'POST') {
+  async req(url, postData, options) {
+    let {isEncrypt = false, method = 'POST', ...other} = options;
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
       method,
       headers: Object.assign({}, headers, this.reqHeader),
-      body: isEncrypt ? postData : JSON.stringify(postData)
+      body: isEncrypt ? postData : JSON.stringify(postData),
+      ...other
     };
     let result = null;
     try {
@@ -193,7 +193,7 @@ class OrionRequestClass {
       wallet
     });
 
-    const postResData = await this.post(reqUrl, sendDataFilterResult, !!wallet);
+    const postResData = await this.req(reqUrl, sendDataFilterResult, {isEncrypt: !!wallet});
 
     if(postResData) {
       let decryptData = decryptFilter({data: postResData, wallet});
@@ -229,8 +229,8 @@ class OrionRequestClass {
     callback && callback(sendDataRes);
   }
 }
-const $request = new OrionRequestClass();
+const $request = new UkeFetchClass();
 
 export {
-  $request, OrionRequestClass
+  $request, UkeFetchClass
 };

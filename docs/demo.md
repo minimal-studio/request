@@ -1,11 +1,11 @@
 # request 的详细使用例子
 
 ```js
-import { $request, OrionRequestClass } from 'orion-request';
+import { $request, UkeFetchClass } from 'uke-fetch';
 
 /**
- *  $request 为内建对象，构造于 OrionRequestClass
- *  $request = new OrionRequestClass()
+ *  $request 为内建对象，构造于 UkeFetchClass
+ *  $request = new UkeFetchClass()
  */
 
 /**
@@ -97,7 +97,7 @@ $GH.EventEmitter.subscribe('CHANGE_NETWORK_STATUS', ({state}) => {
 /**
  * 如果是通过 hash URL 的项目
  */
-import {$request, decodeHashUrl} from 'orion-request';
+import {$request, decodeHashUrl} from 'uke-fetch';
 
 /** 第一个参数为需要解析的参数名称，第二个为是否把他序列化为对象
  * 结构
@@ -175,6 +175,6 @@ export {
 重新构建请求对象
 
 ```js
-import {OrionRequestClass} from 'orion-request';
-const $request = new OrionRequestClass();
+import {UkeFetchClass} from 'uke-fetch';
+const $request = new UkeFetchClass();
 ```

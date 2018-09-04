@@ -1,21 +1,28 @@
 {
-  "name": "orion-request",
-  "version": "2.1.16",
-  "description": "",
+  "name": "uke-fetch",
+  "version": "0.10.0",
+  "description": "通讯加密，消息压缩",
   "scripts": {
     "publish": "npm publish ./build",
     "release": "npm run build; npm run publish",
     "build": "rm -rf ./build/; npm run build:babel; npm run build:copy-files",
     "build:babel": "NODE_ENV=production babel ./src --out-dir ./build --ignore spec.js",
-    "build:copy-files": "NODE_ENV=production babel-node ./scripts/copy-files.js",
-    "push": "npm publish; git add -A; git commit -m 'update'; git push origin master"
+    "build:copy-files": "NODE_ENV=production babel-node ./scripts/copy-files.js"
   },
   "peerDependencies": {
-    "basic-helper": "^1.3.x"
+    "babel-runtime": "6.26.0",
+    "basic-helper": "^1.3.x",
+    "whatwg-fetch": "2.0.3"
+  },
+  "devDependencies": {
+    "babel-core": "6.25.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "fs-extra": "^7.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.9th.go/matrix-front-end/orion-request.git"
+    "url": "http://github.9th.go/matrix-front-end/uke-fetch.git"
   },
   "author": "alex",
   "license": "ISC",
@@ -24,6 +31,14 @@
       "production": {
         "presets": [
           "env"
+        ],
+        "plugins": [
+          [
+            "transform-object-rest-spread",
+            {
+              "useBuiltIns": true
+            }
+          ]
         ]
       }
     }
