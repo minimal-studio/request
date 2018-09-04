@@ -14,8 +14,8 @@
 ## 一般使用
 
 ```js
-import { UkeFetchClass } from 'uke-fetch';
-let $req = new UkeFetchClass();
+import { RequestClass } from 'uke-request';
+let $req = new RequestClass();
 
 // get, 同 fetch，并且自动根据 res 的 contentType 返回对应的数据类型
 let res = await $req.get(url, options);
@@ -41,11 +41,11 @@ TODO
 
 ```js
 import {
-  $request, UkeFetchClass, PollClass,
+  $request, RequestClass, PollClass,
   GateResSpeedTesterClass,
   decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl,
   getUrlParams, searchUrlParams, toBase64Str, fromBase64Str
-} from 'uke-fetch';
+} from 'uke-request';
 ```
 
 独立文件引用
@@ -54,17 +54,17 @@ import {
 /**
  * main request helper
  */
-import { $request } from 'uke-fetch/request.js';
+import { $request } from 'uke-request/request.js';
 
 /**
  * simple GateResSpeedTesterClass component
  */
-import { GateResSpeedTesterClass, getSpeedColl } from 'uke-fetch/network-res-speed-tester.js';
+import { GateResSpeedTesterClass, getSpeedColl } from 'uke-request/network-res-speed-tester.js';
 
 /**
  * 用于把 request 的 header base64 ，并且通过 window open 的方式打开，同时提供获取对应的路由的解密函数
  */
-import { decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl } from 'uke-fetch/url-hash-helper.js';
+import { decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl } from 'uke-request/url-hash-helper.js';
 
 let windowTargetObj = openWindowUseHashUrl(url, windowParamStr);
 let resultStr = decodeHashUrl();

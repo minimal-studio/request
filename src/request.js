@@ -1,7 +1,7 @@
 /**
  * 此文件不能轻易修改
  * 1. 网络请求错误的处理机制
- * 2. 不再处理业务，业务在外部进行处理
+ * 2. 专注于基础技术支持
  */
 import {CallFunc, IsFunc, HasValue, EventEmitterClass} from 'basic-helper';
 import {compressFilter, decompressFilter} from './compress-helper';
@@ -62,7 +62,7 @@ function isResJson(res) {
   return /json/.test(getContentType(res));
 }
 
-class UkeFetchClass {
+class RequestClass {
   constructor(config) {
     this.defaultConfig = {
       reqUrl: '',
@@ -229,8 +229,8 @@ class UkeFetchClass {
     callback && callback(sendDataRes);
   }
 }
-const $request = new UkeFetchClass();
+const $request = new RequestClass();
 
 export {
-  $request, UkeFetchClass
+  $request, RequestClass
 };

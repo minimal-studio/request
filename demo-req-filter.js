@@ -1,7 +1,7 @@
 /**
  * 这里是根据具体业务的 filter 函数集
  */
-import {$request, PollClass} from 'uke-fetch';
+import {$request, PollClass} from 'uke-request';
 import {getUserInfo, getSessID, onLoginFail} from 'matrix-user-authenticator-actions';
 
 function getUserName() {
