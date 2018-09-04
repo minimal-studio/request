@@ -54,6 +54,14 @@ async function getDecompressAndDectyptDataAsync({
 
 if(process.env.NODE_ENV == 'development') window.decryptFilter = decryptFilter;
 
+function getContentType(res) {
+  return res.headers.get("content-type");
+}
+
+function isResJson(res) {
+  return /json/.test(getContentType(res));
+}
+
 class OrionRequestClass {
   constructor(config) {
     const self = this;
@@ -115,28 +123,31 @@ class OrionRequestClass {
       }
     });
   }
-  async get(url) {
-    const getResult = await fetch(url);
+  async get(url, options) {
+    const getResult = await fetch(url, options);
+    let isJsonRes = isResJson(getResult);
+    // console.log(getResult.headers.get("content-type"))
     let result;
     if(this.checkResStatus(getResult)) {
-      result = await getResult.text();
+      result = await (isJsonRes ? getResult.json() : getResult.text());
     } else {
       result = false;
     }
     return result;
   }
-  async post(url, postData, isEncrypt = false) {
+  async post(url, postData, isEncrypt = false, method = 'POST') {
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
-      method: "POST",
+      method,
       headers: Object.assign({}, headers, this.reqHeader),
       body: isEncrypt ? postData : JSON.stringify(postData)
     };
     let result = null;
     try {
       let fetchRes = await fetch(url, fetchOptions);
+      let isJsonRes = isResJson(fetchRes);
       if(this.checkResStatus(fetchRes)) {
-        const resData = await fetchRes.text();
+        const resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
         result = resData;
       }
     } catch(e) {
