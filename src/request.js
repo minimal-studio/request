@@ -133,7 +133,7 @@ class RequestClass {
     }
     return result;
   }
-  async fetch(url, postData, options) {
+  async request(url, postData, options) {
     let {isEncrypt = false, method = 'POST', ...other} = options;
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
@@ -193,7 +193,7 @@ class RequestClass {
       wallet
     });
 
-    const postResData = await this.fetch(reqUrl, sendDataFilterResult, {isEncrypt: !!wallet});
+    const postResData = await this.request(reqUrl, sendDataFilterResult, {isEncrypt: !!wallet});
 
     if(postResData) {
       let decryptData = decryptFilter({data: postResData, wallet});

@@ -24,7 +24,7 @@ let res = await $req.get(url, options);
 let options = {
   method: ''
 }
-let res = await $req.req(url, sendData, options)
+let res = await $req.request(url, sendData, options)
 ```
 
 ## 数据加密
