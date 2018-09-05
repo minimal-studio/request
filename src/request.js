@@ -40,18 +40,6 @@ async function getCompressAndEnctyptDataAsync({
   return encryptDataResult;
 }
 
-async function getDecompressAndDectyptDataAsync({
-  targetData = {}, originData, compressLenLimit, beforeEncryptHook, wallet
-}) {
-  /*
-  * handle res data step
-  * 1. 解密
-  * 2. 解压
-  */
-
-  return encryptDataResult;
-}
-
 if(process.env.NODE_ENV == 'development') window.decryptFilter = decryptFilter;
 
 function getContentType(res) {
@@ -133,7 +121,7 @@ class RequestClass {
     }
     return result;
   }
-  async request(url, postData, options) {
+  async request(url, postData, options = {}) {
     let {isEncrypt = false, method = 'POST', ...other} = options;
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
@@ -178,12 +166,12 @@ class RequestClass {
     if(this.reconnectedCount == 15) {
       this.changeNetworkState('reconnecting');
     }
-    const self = this;
 
     this.reconnectedCount++;
   }
-  async send({sendData, reqUrl = this.reqUrl, wallet = this.wallet, onRes, onErr}) {
-    if(!reqUrl) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
+  async send({sendData, url = this.reqUrl, path = '', wallet = this.wallet, onRes, onErr}) {
+    let _url = (new URL(path, url)).href || '';
+    if(!url || !_url) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
 
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
@@ -193,7 +181,8 @@ class RequestClass {
       wallet
     });
 
-    const postResData = await this.request(reqUrl, sendDataFilterResult, {isEncrypt: !!wallet});
+
+    const postResData = await this.request(_url, sendDataFilterResult, {isEncrypt: !!wallet});
 
     if(postResData) {
       let decryptData = decryptFilter({data: postResData, wallet});
@@ -219,14 +208,6 @@ class RequestClass {
 
       return false;
     }
-  }
-  async gameGate(sendData, callback, onErr, reqUrl) {
-    const sendDataRes = await this.send({
-      sendData: sendData,
-      reqUrl: reqUrl,
-      wallet: this.wallet,
-    });
-    callback && callback(sendDataRes);
   }
 }
 const $request = new RequestClass();
