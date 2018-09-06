@@ -55,6 +55,6 @@ export function decryptFilter({data, wallet}) {
       _data = JSON.parse(decodeRes);
     } catch (e) {}
   }
-  let result = (typeof _data === 'string' ? JSON.parse(_data) : _data) || {};
-  return result;
+  // let result = (typeof _data === 'string' ? JSON.parse(_data) : _data) || {};
+  return _data;
 }
