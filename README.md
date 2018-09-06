@@ -1,15 +1,16 @@
 # Uke Fetch
 
-基于原生 fetch 功能的拓展封装库
+基于 window.fetch 的拓展封装库
 
 ## 提供的能力
 
-- 与原生 fetch 相同的用法
 - 消息压缩，使用 lzma 压缩算法
 - 消息加密，使用 RC4 加密算法
 - 域名测速器
-- 浏览器域名的解析器，包括 hash base64 转码解码
-- 简易轮询辅助函数
+- 浏览器域名的解析器，hash base64 转码解码
+- 简易轮询机制
+
+## [引用方式](./docs/import-desc.md)
 
 ## 一般使用
 
@@ -27,51 +28,7 @@ let options = {
 let res = await $req.request(url, sendData, options)
 ```
 
-## 数据加密
-
-TODO
-
-## 数据压缩
-
-TODO
-
-## 引用方式
-
-全部引用
-
-```js
-import {
-  $request, RequestClass, PollClass,
-  GateResSpeedTesterClass,
-  decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl,
-  getUrlParams, searchUrlParams, toBase64Str, fromBase64Str
-} from 'uke-request';
-```
-
-独立文件引用
-
-```js
-/**
- * main request helper
- */
-import { $request } from 'uke-request/request.js';
-
-/**
- * simple GateResSpeedTesterClass component
- */
-import { GateResSpeedTesterClass, getSpeedColl } from 'uke-request/network-res-speed-tester.js';
-
-/**
- * 用于把 request 的 header base64 ，并且通过 window open 的方式打开，同时提供获取对应的路由的解密函数
- */
-import { decodeHashUrl, wrapReqHashUrl, openWindowUseHashUrl } from 'uke-request/url-hash-helper.js';
-
-let windowTargetObj = openWindowUseHashUrl(url, windowParamStr);
-let resultStr = decodeHashUrl();
-let wrapReqHashUrlStr = wrapReqHashUrl(url);
-```
-
-## 用法
+## 模块说明
 
 ### 测速器
 
@@ -164,6 +121,14 @@ $request 内部运作流程和原理
 
 - [详细说明](./docs/demo.md)
 - [demo code](./demo-req-filter.js)
+
+## 数据加密
+
+TODO: 完善说明
+
+## 数据压缩
+
+TODO: 完善说明
 
 ## TODO
 
