@@ -20,6 +20,15 @@ export function searchUrlParams(searchStr) {
   return window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(searchStr).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1");
 }
 
+export function resolveUrl(...urls) {
+  let urlStr = [...urls].join('/');
+  let seperater = '://';
+  let [protocal, other] = urlStr.split(seperater);
+  other = other.replace(/\/+/g, '/');
+  urlStr = `${protocal}${seperater}${other}`
+  return urlStr;
+}
+
 export function decodeHashUrl(sVar, isParse = false) {
   let decryptData = searchUrlParams(sVar);
   let decryResult = fromBase64Str(decryptData);

@@ -98,26 +98,18 @@ let id = decodeHashUrl('id');
 let req = decodeHashUrl('req', true);
 ```
 
-### $request 的工作原理以及与服务端交互的过程
+### URL 拼接
 
-外部使用的过程
+```js
+import { resolveUrl } from 'uke-request';
 
-1. 通过请求发起前的 hook 函数，包装出符合对应服务器的请求体结构 「request entity」
-2. 包装发送请求对象
-3. 响应并统一处理特定的业务
+resolveUrl('baseUrl', '/params1', 'params2', ...);
+// -> baseUrl/params1/params2
+```
 
-$request 内部运作流程和原理
+### [工作原理以及与服务端交互的过程](./docs/work-principle.md)
 
-1. 审阅请求的内容，是否达到需要压缩的长度，默认是 2048 k
-2. 寻找加密的 key，并且做对应的加密处理
-3. 发送到指定的远端服务接口
-4. 收到远端的回应
-5. 解密
-6. 解压缩
-
-如果 1 2 5 6 没达到特定的要求，就发送原始结构
-
-详情请参考以下例子
+### 例子
 
 - [详细说明](./docs/demo.md)
 - [demo code](./demo-req-filter.js)

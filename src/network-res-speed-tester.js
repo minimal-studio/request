@@ -2,8 +2,8 @@
  * 网络测速
  */
 
-import {$request} from './request';
-import {CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass} from 'basic-helper';
+import { $request } from './request';
+import { CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass } from 'basic-helper';
 
 export class GateResSpeedTesterClass {
   constructor() {

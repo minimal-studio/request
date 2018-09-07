@@ -3,9 +3,10 @@
  * 1. 网络请求错误的处理机制
  * 2. 专注于基础技术支持
  */
-import {CallFunc, IsFunc, HasValue, EventEmitterClass} from 'basic-helper';
-import {compressFilter, decompressFilter} from './compress-helper';
-import {encryptFilter, decryptFilter} from './encrypt-helper';
+import { CallFunc, IsFunc, HasValue, EventEmitterClass } from 'basic-helper';
+import { compressFilter, decompressFilter } from './compress-helper';
+import { encryptFilter, decryptFilter } from './encrypt-helper';
+import { resolveUrl } from './url-resolve';
 
 const canSetFields = [
   'reqUrl', 'compressLenLimit',
@@ -170,7 +171,7 @@ class RequestClass {
     this.reconnectedCount++;
   }
   async send({sendData, url = this.reqUrl, path = '', wallet = this.wallet, onRes, onErr}) {
-    let _url = (new URL(path, url)).href || '';
+    let _url = resolveUrl(url, path);
     if(!url || !_url) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
 
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
