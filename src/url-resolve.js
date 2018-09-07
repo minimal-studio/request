@@ -21,11 +21,10 @@ export function searchUrlParams(searchStr) {
 }
 
 export function resolveUrl(baseUrl, ...paths) {
-  let pathStr = [...paths].join('/');
-  let res = '';
+  baseUrl = baseUrl.replace(/\/+$/, '');
+  let pathStr = ['', ...paths].join('/');
   pathStr = pathStr.replace(/\/+/g, '/');
-  res = `${baseUrl}${pathStr}`
-  return res;
+  return `${baseUrl}${pathStr}`;
 }
 
 export function decodeHashUrl(sVar, isParse = false) {
