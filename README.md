@@ -14,18 +14,39 @@
 
 ## 一般使用
 
+GET
+
 ```js
 import { RequestClass } from 'uke-request';
 let $req = new RequestClass();
 
 // get, 同 fetch，并且自动根据 res 的 contentType 返回对应的数据类型
 let res = await $req.get(url, options);
+```
 
+request
+
+```js
 // 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
 let options = {
-  method: ''
+  method: 'POST'
 }
-let res = await $req.request(url, sendData, options)
+let res = await $req.request(url, sendData, options);
+```
+
+send, 最顶层 api, 数据加解密和解压缩通过次接口
+
+```js
+let sendConfig = {
+  sendData: {
+    data: {}
+    other: {}
+  },
+  path: 'test',
+  onErr: () => {},
+  wallet: []
+}
+let res = await $req.send(sendConfig);
 ```
 
 ## 模块说明
