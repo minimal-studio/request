@@ -23,6 +23,11 @@ function restoreKey(keyArr) {
 }
 
 let encryKeyStore = {};
+
+function walletFilter(wallet) {
+  if(!encryKeyStore[wallet]) encryKeyStore[wallet] = Array.isArray(wallet) ? restoreKey(wallet) : wallet;
+  return encryKeyStore[wallet];
+}
 /**
  * 加密过滤器
  * @param  {String}   wallet          加密的key的代码，wallet
@@ -30,9 +35,8 @@ let encryKeyStore = {};
  * KNIMKLIQ
  */
 export function encryptFilter({data, callback, wallet}) {
-  if(!encryKeyStore[wallet]) encryKeyStore[wallet] = restoreKey(wallet);
+  let encryptKey = walletFilter(wallet);
   let resultData = data;
-  let encryptKey = encryKeyStore[wallet];
 
   if(encryptKey) {
     let dataStr = JSON.stringify(data);
@@ -43,9 +47,8 @@ export function encryptFilter({data, callback, wallet}) {
 }
 
 export function decryptFilter({data, wallet}) {
-  if(!encryKeyStore[wallet]) encryKeyStore[wallet] = restoreKey(wallet);
+  let encryptKey = walletFilter(wallet);
   let _data = data;
-  let encryptKey = encryKeyStore[wallet];
 
   if (encryptKey) {
     let currRc4Entity = getRc4Entity(encryptKey);
