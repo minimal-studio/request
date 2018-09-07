@@ -44,8 +44,10 @@ let sendConfig = {
   },
   path: 'test',
   onErr: () => {},
-  wallet: []
+  wallet: 'hahaha'
 }
+
+// 加密了 sendConfig.sendData 中的数据, 增加破解协议的成本
 let res = await $req.send(sendConfig);
 ```
 
