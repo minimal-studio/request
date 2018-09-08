@@ -22,10 +22,12 @@ export function searchUrlParams(searchStr) {
 
 export function resolveUrl(baseUrl, ...paths) {
   baseUrl = baseUrl.replace(/\/+$/, '');
-  let pathStr = ['', ...paths].join('/');
+  let pathStr = [...paths].filter(i => !!i).join('/');
   pathStr = pathStr.replace(/\/+/g, '/');
   return `${baseUrl}${pathStr}`;
 }
+
+// console.log(resolveUrl('//asd.com/asd', '', '/qwe/', '/asd '))
 
 export function decodeHashUrl(sVar, isParse = false) {
   let decryptData = searchUrlParams(sVar);
