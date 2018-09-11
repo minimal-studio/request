@@ -1,4 +1,4 @@
-import LZMA from './lzma_worker-min';
+import LZMA from './lzma_worker';
 
 export function compressFilter({data, compressLenLimit = 2048}) {
   return new Promise((resolve, reject) => {
@@ -26,7 +26,7 @@ export function decompressFilter(data) {
       let decompressData = convertFormatedHexToBytes(data);
       LZMA.decompress(decompressData, (result, err) => {
         let resData = {};
-        if(!err) return reject(err);
+        if(!!err) return reject(err);
         try {
           resData = JSON.parse(result);
         } catch(e) {
