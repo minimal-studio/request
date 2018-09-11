@@ -26,6 +26,7 @@ export function decompressFilter(data) {
       let decompressData = convertFormatedHexToBytes(data);
       LZMA.decompress(decompressData, (result, err) => {
         let resData = {};
+        if(!err) return reject(err);
         try {
           resData = JSON.parse(result);
         } catch(e) {
