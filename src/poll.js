@@ -166,7 +166,7 @@ export default class PollMethod {
       }
     });
     const sendResData = await this.$request.send({
-      sendData: _pollData, reqUrl: this.pollUrl
+      sendData: _pollData, url: this.pollUrl
     });
     let data = sendResData.data;
     for (var dataKey in data) {
