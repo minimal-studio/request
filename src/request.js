@@ -41,7 +41,10 @@ async function getCompressAndEnctyptDataAsync({
   return encryptDataResult;
 }
 
-if(process.env.NODE_ENV == 'development') window.decryptFilter = decryptFilter;
+if(process.env.NODE_ENV == 'development') {
+  window.decryptFilter = decryptFilter;
+  window.decompressFilter = decompressFilter;
+}
 
 function getContentType(res) {
   return res.headers.get("content-type");

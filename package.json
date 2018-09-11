@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "0.10.10",
+  "version": "0.10.11",
   "description": "通讯加密，消息压缩",
   "scripts": {
     "publish": "npm publish ./build",
@@ -25,25 +25,6 @@
   },
   "author": "alex",
   "license": "ISC",
-  "babel": {
-    "env": {
-      "production": {
-        "presets": [
-          [
-            "@babel/preset-env",
-            {
-              "useBuiltIns": "entry"
-            }
-          ]
-        ],
-        "plugins": [
-          [
-            "@babel/plugin-transform-runtime"
-          ]
-        ]
-      }
-    }
-  },
   "dependencies": {
     "@babel/runtime": "^7.0.0"
   }
