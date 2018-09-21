@@ -34,10 +34,7 @@
      api: APIS.QUERY_USER_FOR_POLLING, // 必须的
      getData() {                       // 必须的
        return {
-         Method: this.api,
-         Data: {
-           Count: 1
-         }
+         data
        };
      }
    }
