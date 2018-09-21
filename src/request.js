@@ -154,11 +154,11 @@ class RequestClass {
   }
   async request(url, postData, options = {}) {
     let _url = this.urlFilter(url);
-    let {isEncrypt = false, method = 'POST', ...other} = options;
-    let headers = isEncrypt ? headersMapper.html : headersMapper.js;
+    let { isEncrypt = false, method = 'POST', headers, ...other } = options;
+    let _headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
       method,
-      headers: Object.assign({}, headers, this.reqHeader),
+      headers: Object.assign({}, _headers, this.reqHeader, headers),
       body: isEncrypt ? postData : JSON.stringify(postData),
       ...other
     };
@@ -172,7 +172,7 @@ class RequestClass {
       }
     } catch(e) {
       console.log(e);
-      this.onErr();
+      this.onErr(e);
     }
     return result;
   }
@@ -201,7 +201,7 @@ class RequestClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, url, path, wallet = this.wallet, method = 'POST', onRes, onErr}) {
+  async send({sendData, url, path, wallet = this.wallet, method = 'POST', headers, onRes, onErr}) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
       originData: sendData,
@@ -212,7 +212,8 @@ class RequestClass {
 
     const postResData = await this.request(url || path, sendDataFilterResult, {
       isEncrypt: !!wallet,
-      method
+      method,
+      headers
     });
 
     if(postResData) {
