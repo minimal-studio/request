@@ -201,7 +201,7 @@ class RequestClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, url, path, wallet = this.wallet, onRes, onErr}) {
+  async send({sendData, url, path, wallet = this.wallet, method = 'POST', onRes, onErr}) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
       originData: sendData,
@@ -210,7 +210,10 @@ class RequestClass {
       wallet
     });
 
-    const postResData = await this.request(url || path, sendDataFilterResult, {isEncrypt: !!wallet});
+    const postResData = await this.request(url || path, sendDataFilterResult, {
+      isEncrypt: !!wallet,
+      method
+    });
 
     if(postResData) {
       let decryptData = decryptFilter({data: postResData, wallet});
