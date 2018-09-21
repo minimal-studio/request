@@ -23,7 +23,7 @@ export function searchUrlParams(searchStr) {
 export function resolveUrl(baseUrl, ...paths) {
   baseUrl = baseUrl.replace(/\/+$/, '');
   let pathStr = [...paths].filter(i => !!i).join('/');
-  pathStr = pathStr.replace(/\/+/g, '/');
+  pathStr = ('/' + pathStr).replace(/\/+/g, '/');
   return `${baseUrl}${pathStr}`;
 }
 

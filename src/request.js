@@ -128,6 +128,7 @@ class RequestClass {
   urlFilter(path) {
     if(/https?/.test(path)) return path;
     let url = this.baseUrl || this.reqUrl;
+    if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
     return resolveUrl(url, path);
   }
   upload(path, data) {
@@ -200,9 +201,7 @@ class RequestClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, url = this.baseUrl || this.reqUrl, path = '', wallet = this.wallet, onRes, onErr}) {
-    if(!url || !path) return console.log('set $request.setConfig({baseUrl: url}) first');
-
+  async send({sendData, url, path, wallet = this.wallet, onRes, onErr}) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
       originData: sendData,
@@ -210,7 +209,6 @@ class RequestClass {
       beforeEncryptHook: this._wrapDataBeforeSend.bind(this),
       wallet
     });
-
 
     const postResData = await this.request(url || path, sendDataFilterResult, {isEncrypt: !!wallet});
 
