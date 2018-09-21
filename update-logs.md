@@ -1,5 +1,12 @@
 # update logs
 
+## 0.11.0
+
+- 优化底层 API，支持 RESTFul 调用
+- api setRequestConfig 更名为 setConfig
+- baseUrl 取代 reqUrl
+- 新增 post put del 等 RESTFul API
+
 ## 2.1.9
 
 - 新增一个 searchUrlParams 接口，用于分析网页的参数

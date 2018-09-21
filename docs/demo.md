@@ -115,7 +115,7 @@ let hashSearched = decodeHashUrl('req', true);
 /**
  * 设置必须的配置
  */
-$request.setRequestConfig({
+$request.setConfig({
   reqUrl: hashSearched.reqUrl || reqUrl,
   wallet: hashSearched.__none || window.__none // 这个为隐秘的加密 key array
 });

@@ -9,7 +9,7 @@ import { encryptFilter, decryptFilter } from './encrypt-helper';
 import { resolveUrl } from './url-resolve';
 
 const canSetFields = [
-  'reqUrl', 'compressLenLimit',
+  'reqUrl', 'compressLenLimit', 'baseUrl',
   'reconnectTime', 'wallet', 'reqHeader'
 ];
 
@@ -58,6 +58,7 @@ class RequestClass {
   constructor(config) {
     this.defaultConfig = {
       reqUrl: '',
+      baseUrl: '',
       compressLenLimit: 2048,
       reconnectedCount: 0, // 记录连接状态
       reconnectTime: 30, // 重连次数, 默认重连五次, 五次都失败将调用
@@ -71,7 +72,7 @@ class RequestClass {
     };
 
     this.reqStructure = {
-      method: '',
+      path: '/',
       data: {},
       isCompress: false
     }
@@ -79,6 +80,13 @@ class RequestClass {
     this.eventEmitter = new EventEmitterClass();
 
     Object.assign(this, this.defaultConfig, config);
+
+    this.post = this._reqFactory('POST');    
+    this.put = this._reqFactory('PUT');    
+    this.del = this._reqFactory('DELETE');    
+  }
+  _reqFactory(method) {
+    return (url, data, options = {}) => this.request(url, data, Object.assign(options, {method}));
   }
   onRes(res) {
     // console.log('请配置 onRes');
@@ -103,7 +111,7 @@ class RequestClass {
     if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
-  setRequestConfig(config) {
+  setConfig(config) {
     /**
      * 避免被设置其他字段
      */
@@ -113,8 +121,26 @@ class RequestClass {
       }
     });
   }
+  setRequestConfig(config) {
+    this.setConfig(config);
+    console.warn('setRequestConfig will be discard, please call setConfig');
+  }
+  urlFilter(path) {
+    if(/https?/.test(path)) return path;
+    let url = this.baseUrl || this.reqUrl;
+    return resolveUrl(url, path);
+  }
+  upload(path, data) {
+    let _url = this.urlFilter(path);
+    return fetch(_url, {
+      method: 'POST',
+      body: data,
+      // headers: uploadHeader,
+    });
+  }
   async get(url, options) {
-    const getResult = await fetch(url, options);
+    let _url = this.urlFilter(url);
+    const getResult = await fetch(_url, options);
     let isJsonRes = isResJson(getResult);
     // console.log(getResult.headers.get("content-type"))
     let result;
@@ -126,6 +152,7 @@ class RequestClass {
     return result;
   }
   async request(url, postData, options = {}) {
+    let _url = this.urlFilter(url);
     let {isEncrypt = false, method = 'POST', ...other} = options;
     let headers = isEncrypt ? headersMapper.html : headersMapper.js;
     let fetchOptions = {
@@ -136,7 +163,7 @@ class RequestClass {
     };
     let result = null;
     try {
-      let fetchRes = await fetch(url, fetchOptions);
+      let fetchRes = await fetch(_url, fetchOptions);
       let isJsonRes = isResJson(fetchRes);
       if(this.checkResStatus(fetchRes)) {
         const resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
@@ -173,9 +200,8 @@ class RequestClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, url = this.reqUrl, path = '', wallet = this.wallet, onRes, onErr}) {
-    let _url = resolveUrl(url, path);
-    if(!url || !_url) return console.log('set $request.setRequestConfig({reqUrl: url}) first');
+  async send({sendData, url = this.baseUrl || this.reqUrl, path = '', wallet = this.wallet, onRes, onErr}) {
+    if(!url || !path) return console.log('set $request.setConfig({baseUrl: url}) first');
 
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
@@ -186,7 +212,7 @@ class RequestClass {
     });
 
 
-    const postResData = await this.request(_url, sendDataFilterResult, {isEncrypt: !!wallet});
+    const postResData = await this.request(url || path, sendDataFilterResult, {isEncrypt: !!wallet});
 
     if(postResData) {
       let decryptData = decryptFilter({data: postResData, wallet});
