@@ -222,7 +222,7 @@ class RequestClass extends EventEmitterClass {
 
     this.reconnectedCount++;
   }
-  async send({sendData, url, path, wallet = this.wallet, method = 'POST', headers, onRes, onErr}) {
+  async send({sendData, url, path, wallet = this.wallet, method = 'POST', headers, onErr}) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
       originData: sendData,
@@ -239,8 +239,8 @@ class RequestClass extends EventEmitterClass {
       headers
     });
 
-    if(HasValue(postResData.data)) {
-      let decryptData = decryptFilter({data: postResData.data, wallet});
+    if(HasValue(postResData)) {
+      let decryptData = decryptFilter({data: postResData, wallet});
       let dataFilterRes = this.setResDataHook(decryptData);
 
       if(HasValue(dataFilterRes.data)) {
@@ -250,8 +250,6 @@ class RequestClass extends EventEmitterClass {
       } else {
         console.log('need set data for res data');
       }
-
-      CallFunc(onRes)(postResData);
 
       return dataFilterRes;
     } else {
