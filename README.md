@@ -1,40 +1,75 @@
-# Uke Fetch
+# Uke Request
 
-基于 window.fetch 的拓展封装库
+基于 window.fetch 的拓展封装库, 基于异步事件监听机制
 
 ## 提供的能力
 
-- 消息压缩，使用 lzma 压缩算法
+- 消息压缩
 - 消息加密
 - 域名测速器
 - 浏览器域名的解析器，hash base64 转码解码
 - 简易轮询机制
+- [引用方式](./docs/import-desc.md)
 
-## [引用方式](./docs/import-desc.md)
+## 使用
 
-## 一般使用
+### 高级使用方式
 
-GET
+RESTFul
 
 ```js
 import { RequestClass } from 'uke-request';
-let $req = new RequestClass();
+let $R = new RequestClass();
 
-// get, 同 fetch，并且自动根据 res 的 contentType 返回对应的数据类型
-let res = await $req.get(url, options);
+// 可以为每一个请求对象设置配置
+$R.setConfig({
+  baseUrl: 'https://example.com', // 默认的地址，
+  timeout: 10 * 1000,
+  compressLenLimit: 2048, // 消息体压缩长度
+  reconnectTime: 30, // 重连次数
+  wallet: '123', // 密钥
+  commonHeaders: {} // 所有的请求 headers
+});
+
+// get, 使用 params 自动转换成对应的 url
+let res = await $R.get('/item-list', options);
+let res = await $R.get({
+  url: '/item-list',
+  headers: {},
+  params: {
+    id: 123,
+    other: 321
+  },
+  isBase64: false // 用于加密 params 的值
+});
+
+// post, 此方法只返回 res.data, 如果想要详情，可以订阅事件 onRes, 获取更多细节
+let res = await $R.post({
+  url: '/item-list',
+  headers: {},
+  data: {},
+});
+
+// 订阅 res 详细相应
+$R.on('onRes', (resDetail) => {
+  resDetail = {
+    data: {},
+    originRes: {},
+    originReq: {},
+  }
+});
 ```
 
-request
+底层 request 对象
 
 ```js
 // 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
-let options = {
-  method: 'POST'
-}
-let res = await $req.request(url, sendData, options);
+let res = await $R.request({
+  url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, ...other
+});
 ```
 
-send, 最顶层 api, 数据加解密和解压缩通过次接口
+消息体加密和消息压缩功能，请使用 $R.send
 
 ```js
 let sendConfig = {
@@ -48,103 +83,7 @@ let sendConfig = {
 }
 
 // 加密了 sendConfig.sendData 中的数据, 增加破解协议的成本
-let res = await $req.send(sendConfig);
+let res = await $R.send(sendConfig);
 ```
 
-## 模块说明
-
-### 测速器
-
-```js
-const gateResSpeedTester = new GateResSpeedTesterClass();
-
-// 测速结束后的 callback
-gateResSpeedTester.onEnd = (result) => {
-  // result 的结构
-  result = {
-    fastestIdx: numb,
-    testRes: {
-      [idx]: url
-    }
-  }
-};
-
-// 每一次条链接测速后的 callback
-gateResSpeedTester.onRes = () => {};
-
-// 设置测速
-gateResSpeedTester.setConfig({
-  gateUrls: [
-    'https://url-1.com',
-    'https://url-2.com',
-    'https://url-3.com',
-    'https://url-4.com',
-  ],
-  suffix: '/sudo'
-});
-
-// 开始测速，会逐一把上述定义的 gateUrls 测速，加入后缀 /sudo
-gateResSpeedTester.test();
-```
-
-### 路由解析器
-
-前后端分离的应用，如果需要打开另一个新的应用，可以通过 url 的方式，把 sessionID 和相关的信息通过路由传递
-
-下面模拟场景，应用一通过 openWindowUseHashUrl 打开应用二
-
-```js
-// 应用一
-let urlParamsConfig = {
-  url: 'https://ss.com',
-  params: {
-    id: '1',
-    req: {
-      sessID: 123,
-      username: 'alex',
-    }
-  }
-}
-let windowParams = '作为 window.open 的第三个参数，详情参考 w3school';
-/**
- * 1. 把 urlParamsConfig 对应的字段转码成 base64，然后打开一个新的窗口二，路由如下
- * https://ss.com?id=MQ==&req=eyJzZXNzSUQiOjEyMywidXNlcm5hbWUiOiJhbGV4In0=&
- */
-openWindowUseHashUrl(urlParamsConfig, windowParams);
-
-/**
- * 在此应用二，使用 decodeHashUrl 可以解码路由，获取对应的参数
- * decodeHashUrl 参数说明
- * decodeHashUrl(searchStr, isParseToObject);
- */
-let id = decodeHashUrl('id');
-let req = decodeHashUrl('req', true);
-```
-
-### URL 拼接
-
-```js
-import { resolveUrl } from 'uke-request';
-
-resolveUrl('baseUrl', '/params1', 'params2', ...);
-// -> baseUrl/params1/params2
-```
-
-### [工作原理以及与服务端交互的过程](./docs/work-principle.md)
-
-### 例子
-
-- [详细说明](./docs/demo.md)
-- [demo code](./demo-req-filter.js)
-
-## 数据加密
-
-TODO: 完善说明
-
-## 数据压缩
-
-TODO: 完善说明
-
-## TODO
-
-- 完善测试用例
+- [其他模块说明](./docs/other-desc.md)

@@ -1,16 +1,25 @@
 /**
- * 此文件不能轻易修改
- * 1. 网络请求错误的处理机制
- * 2. 专注于基础技术支持
+ * Lib: Uke Request
+ * Author: Alex
+ * Desc:
+ * 轻松实现以下功能
+ * 
+ * 1. 消息体加|解密
+ * 2. 消息体压|解缩
+ * 3. RESTFul 数据封装
+ * 4. 封装每次请求的 abort 操作
  */
+
+import 'whatwg-fetch';
+
 import { CallFunc, IsFunc, HasValue, EventEmitterClass } from 'basic-helper';
 import { compressFilter, decompressFilter } from './compress-helper';
 import { encryptFilter, decryptFilter } from './encrypt-helper';
-import { resolveUrl } from './url-resolve';
+import { resolveUrl, wrapReqHashUrl } from './url-resolve';
 
 const canSetFields = [
-  'reqUrl', 'compressLenLimit', 'baseUrl',
-  'reconnectTime', 'wallet', 'reqHeader'
+  'compressLenLimit', 'baseUrl', 'timeout',
+  'reconnectTime', 'wallet', 'commonHeaders'
 ];
 
 const headersMapper = {
@@ -54,64 +63,43 @@ function isResJson(res) {
   return /json/.test(getContentType(res));
 }
 
-class RequestClass {
+class RequestClass extends EventEmitterClass {
   constructor(config) {
+    super();
     this.defaultConfig = {
-      reqUrl: '',
       baseUrl: '',
       compressLenLimit: 2048,
       reconnectedCount: 0, // 记录连接状态
       reconnectTime: 30, // 重连次数, 默认重连五次, 五次都失败将调用
       connectState: 'ok',
-      req: null,
-      reqQueue: {},
       wallet: '',
-      reqHeader: {},
-      resMark: 'ON_REQ_RES'
-      // 请求回调不在处理业务，请设置对应的业务回调处理
+      commonHeaders: {},
+      timeout: 10 * 1000,
+      resMark: 'onRes',
+      errMark: 'onErr',
     };
 
     this.reqStructure = {
-      path: '/',
+      route: '/',
       data: {},
       isCompress: false
     }
 
-    this.eventEmitter = new EventEmitterClass();
+    // this.eventEmitter = new EventEmitterClass();
 
-    Object.assign(this, this.defaultConfig, config);
+    Object.assign(this, this.defaultConfig, this.setConfig(config));
 
-    this.post = this._reqFactory('POST');    
-    this.put = this._reqFactory('PUT');    
-    this.del = this._reqFactory('DELETE');    
+    this.post = this._reqFactory('POST');
+    this.put = this._reqFactory('PUT');
+    this.del = this._reqFactory('DELETE');
   }
   _reqFactory(method) {
-    return (url, data, options = {}) => this.request(url, data, Object.assign(options, {method}));
-  }
-  onRes(res) {
-    // console.log('请配置 onRes');
-    this.eventEmitter.emit(this.resMark, res);
-  } // 请求完成的 callback
-  setResDataHook(resData) {
-    // 可以重写，用于做 resData 的业务处理
-    console.log('set [$request.setResDataHook = func] first');
-    return resData;
-  }
-  subscribeRes(func) {
-    this.eventEmitter.subscribe(this.resMark, func);
-  }
-  unsubscribeRes(func) {
-    this.eventEmitter.unsubscribe(this.resMark, func);
-  }
-  onErr() {console.log('need set onErr')} // 网络错误
-  _wrapDataBeforeSend(targetData) {
-    /**
-     * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
-     */
-    if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
-    return targetData;
+    return (url, data, options = {}) => this.request(Object.assign(options, {
+      url, data, method
+    }));
   }
   setConfig(config) {
+    if(!config) return {};
     /**
      * 避免被设置其他字段
      */
@@ -121,72 +109,107 @@ class RequestClass {
       }
     });
   }
-  setRequestConfig(config) {
-    this.setConfig(config);
-    console.warn('setRequestConfig will be discard, please call setConfig');
+  onRes(res) {
+    // 获取完整的 res 对象
+    this.emit(this.resMark, res);
+  }
+  onErr(res) {
+    // 广播消息错误
+    this.emit(this.errMark, res);
+  }
+  setResDataHook(resData) {
+    // 可以重写，用于做 resData 的业务处理
+    console.log('set [$request.setResDataHook = func] first');
+    return resData;
+  }
+  _wrapDataBeforeSend(targetData) {
+    /**
+     * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
+     */
+    if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
+    return targetData;
   }
   urlFilter(path) {
     if(/https?/.test(path)) return path;
-    let url = this.baseUrl || this.reqUrl;
+    let url = this.baseUrl;
     if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
     return resolveUrl(url, path);
   }
   upload(path, data) {
     let _url = this.urlFilter(path);
-    return fetch(_url, {
+    return fetch({
+      url: _url,
       method: 'POST',
-      body: data,
+      data,
       // headers: uploadHeader,
     });
   }
   async get(url, options) {
-    let _url = this.urlFilter(url);
-    const getResult = await fetch(_url, options);
-    let isJsonRes = isResJson(getResult);
-    // console.log(getResult.headers.get("content-type"))
-    let result;
-    if(this.checkResStatus(getResult)) {
-      result = await (isJsonRes ? getResult.json() : getResult.text());
-    } else {
-      result = false;
+    url = this.urlFilter(url);
+
+    let reqConfig = {
+      method: 'GET',
+      url, ...options
+    };
+
+    if(typeof url !== 'string') {
+      reqConfig.url = wrapReqHashUrl({
+        ...reqConfig,
+        toBase64: false
+      });
     }
-    return result;
+
+    return this.request(reqConfig);
   }
-  async request(url, postData, options = {}) {
+  async request({
+    url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, ...other
+  }) {
     let _url = this.urlFilter(url);
-    let { isEncrypt = false, method = 'POST', headers, ...other } = options;
     let _headers = isEncrypt ? headersMapper.html : headersMapper.js;
+
     let fetchOptions = {
       method,
-      headers: Object.assign({}, _headers, this.reqHeader, headers),
-      body: isEncrypt ? postData : JSON.stringify(postData),
+      headers: Object.assign({}, _headers, this.commonHeaders, headers),
+      body: isEncrypt ? data : JSON.stringify(data),
       ...other
     };
-    let result = null;
+
+    let result = {};
+
     try {
+
       let fetchRes = await fetch(_url, fetchOptions);
       let isJsonRes = isResJson(fetchRes);
-      if(this.checkResStatus(fetchRes)) {
-        const resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
-        result = resData;
-      }
+      let resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
+
+      Object.assign(result, {
+        data: resData,
+        originRes: fetchRes,
+        originReq: fetchOptions
+      });
+
+      this.onRes(result);
+      
     } catch(e) {
       console.log(e);
+
+      Object.assign(result, {
+        data: null,
+        err: e
+      });
+
       this.onErr(e);
     }
-    return result;
-  }
-  checkResStatus({status}) {
-    return status == 200;
+
+    return result.data;
   }
   changeNetworkState(state) {
     if(state == this.connectState) return;
-    $GH.EventEmitter && $GH.EventEmitter.emit('CHANGE_NETWORK_STATUS', {
+    this.emit('CHANGE_NETWORK_STATUS', {
       state
     });
     this.connectState = state;
   }
-  // 轮询消息会不断发, 不需要重发消息
   reconnect() {
     this.changeNetworkState('tryToConnecting');
 
@@ -210,14 +233,16 @@ class RequestClass {
       wallet
     });
 
-    const postResData = await this.request(url || path, sendDataFilterResult, {
+    const postResData = await this.request({
+      url: url || path,
+      data: sendDataFilterResult, 
       isEncrypt: !!wallet,
       method,
       headers
     });
 
-    if(postResData) {
-      let decryptData = decryptFilter({data: postResData, wallet});
+    if(HasValue(postResData.data)) {
+      let decryptData = decryptFilter({data: postResData.data, wallet});
       let dataFilterRes = this.setResDataHook(decryptData);
 
       if(HasValue(dataFilterRes.data)) {
@@ -227,16 +252,14 @@ class RequestClass {
       } else {
         console.log('need set data for res data');
       }
-      this.onRes({
-        resData: dataFilterRes,
-      });
-      CallFunc(onRes)();
+
+      CallFunc(onRes)(postResData);
 
       return dataFilterRes;
     } else {
-      this.reconnect();
+      // this.reconnect('not res data.');
 
-      CallFunc(onErr)('network error');
+      CallFunc(onErr)('not res data.');
 
       return false;
     }

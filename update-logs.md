@@ -1,5 +1,17 @@
 # update logs
 
+## 0.12.0
+
+- 重做 res 的结构，符合 RESTFul 标准
+- 优化代码，调整接口名字
+- 继承 EventEmitter，实现高阶事件监听
+- 重做消息 emit 机制，如下
+
+```js
+$GH.EventEmitter.subscribe('CHANGE_NETWORK_STATUS', func) // 修改为
+$request.on('CHANGE_NETWORK_STATUS', func)
+```
+
 ## 0.11.0
 
 - 优化底层 API，支持 RESTFul 调用
