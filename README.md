@@ -60,7 +60,7 @@ $R.on('onRes', (resDetail) => {
 });
 ```
 
-底层 request 对象
+request 函数
 
 ```js
 // 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
