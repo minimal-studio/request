@@ -145,8 +145,6 @@ class RequestClass extends EventEmitterClass {
     });
   }
   async get(url, options) {
-    url = this.urlFilter(url);
-
     let reqConfig = {
       method: 'GET',
       url, ...options
@@ -154,7 +152,7 @@ class RequestClass extends EventEmitterClass {
 
     if(typeof url !== 'string') {
       reqConfig.url = wrapReqHashUrl({
-        ...reqConfig,
+        ...url,
         toBase64: false
       });
     }
