@@ -160,7 +160,7 @@ class RequestClass extends EventEmitterClass {
     return this.request(reqConfig);
   }
   async request({
-    url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, ...other
+    url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, returnAll = false, ...other
   }) {
     let _url = this.urlFilter(url);
     let _headers = isEncrypt ? headersMapper.html : headersMapper.js;
@@ -199,7 +199,7 @@ class RequestClass extends EventEmitterClass {
       this.onErr(e);
     }
 
-    return result.data;
+    return returnAll ? result : result.data;
   }
   changeNetworkState(state) {
     if(state == this.connectState) return;
