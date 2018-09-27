@@ -164,11 +164,15 @@ class RequestClass extends EventEmitterClass {
   }) {
     let _url = this.urlFilter(url);
     let _headers = isEncrypt ? headersMapper.html : headersMapper.js;
+    
+    let body = method == 'GET' ? {} : {
+      body: isEncrypt ? data : JSON.stringify(data)
+    }
 
     let fetchOptions = {
       method,
       headers: Object.assign({}, _headers, this.commonHeaders, headers),
-      body: isEncrypt ? data : JSON.stringify(data),
+      ...body,
       ...other
     };
 
@@ -178,7 +182,14 @@ class RequestClass extends EventEmitterClass {
 
       let fetchRes = await fetch(_url, fetchOptions);
       let isJsonRes = isResJson(fetchRes);
-      let resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
+
+      let resData = {};
+
+      try {
+        resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
+      } catch(e) {
+        console.log(e);
+      }
 
       Object.assign(result, {
         data: resData,

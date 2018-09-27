@@ -65,7 +65,11 @@ request 函数
 ```js
 // 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
 let res = await $R.request({
-  url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, ...other
+  url, data, headers, method = 'POST',
+  isEncrypt = false,
+  resolveRes = true,
+  returnAll = false, // 是否返回完整的 res 状态 return returnAll ? res : res.data
+  ...other
 });
 ```
 
