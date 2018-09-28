@@ -139,7 +139,7 @@ class RequestClass extends EventEmitterClass {
     let _url = this.urlFilter(path);
     return fetch(_url, {
       method: 'POST',
-      data,
+      body: data,
       // headers: uploadHeader,
     });
   }
