@@ -1,5 +1,7 @@
 # Uke Request
 
+[![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request)
+
 基于 window.fetch 的拓展封装库, 基于异步事件监听机制
 
 ## 提供的能力
