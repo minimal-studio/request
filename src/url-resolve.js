@@ -1,11 +1,13 @@
 /**
  * 通过hash url的方式把对应的参数传给新打开的页面
  */
-import {HasValue} from 'basic-helper';
+import { HasValue } from 'basic-helper';
 
-export function getUrlParams(key) {
+export function getUrlParams(key, href) {
   // let searchs = 'http://localhost:3030/#/BANK'.split('?')[1];
-  let searchs = window.location.href.split('?')[1];
+  let _href = href || !!window ? window.location.href : '';
+  if(!_href) return;
+  let searchs = _href.split('?')[1];
   let resultObj = {};
   if(!searchs) return {};
   let params = searchs.split(/&+/);

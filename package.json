@@ -7,13 +7,21 @@
     "release": "npm run build; npm run publish",
     "build": "rm -rf ./build/; npm run build:babel; npm run build:copy-files",
     "build:babel": "NODE_ENV=production babel ./src --out-dir ./build --ignore spec.js",
-    "build:copy-files": "NODE_ENV=production babel-node ./scripts/copy-files.js"
+    "build:copy-files": "NODE_ENV=production babel-node ./scripts/copy-files.js",
+    "test": "jest"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-0",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.1.2",
+    "@babel/node": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
-    "fs-extra": "^7.0.0"
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^23.6.0",
+    "fs-extra": "^7.0.0",
+    "jest": "^23.6.0",
+    "regenerator-runtime": "^0.12.1"
   },
   "repository": {
     "type": "git",
