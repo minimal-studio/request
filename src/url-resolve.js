@@ -23,6 +23,7 @@ export function searchUrlParams(searchStr) {
 }
 
 export function resolveUrl(baseUrl, ...paths) {
+  if(!baseUrl) return console.log('please pass baseUrl');
   baseUrl = baseUrl.replace(/\/+$/, '');
   let pathsRes = [...paths].filter(i => !!i);
 
