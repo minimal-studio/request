@@ -25,7 +25,7 @@ const canSetFields = [
 const headersMapper = {
   js: {'Content-Type': 'application/json; charset=utf-8'},
   html: {'Content-Type': 'text/html'}
-}
+};
 
 async function getCompressAndEnctyptDataAsync({
   targetData = {}, originData, compressLenLimit, beforeEncryptHook, wallet
@@ -83,7 +83,7 @@ class RequestClass extends EventEmitterClass {
       route: '/',
       data: {},
       isCompress: false
-    }
+    };
 
     // this.eventEmitter = new EventEmitterClass();
 
@@ -166,7 +166,7 @@ class RequestClass extends EventEmitterClass {
     
     let body = method == 'GET' ? {} : {
       body: isEncrypt ? data : JSON.stringify(data)
-    }
+    };
 
     let fetchOptions = {
       method,
@@ -221,7 +221,7 @@ class RequestClass extends EventEmitterClass {
   reconnect() {
     this.changeNetworkState('tryToConnecting');
 
-    if(!!this.timer) clearTimeout(this.timer);
+    if(this.timer) clearTimeout(this.timer);
     if(this.reconnectedCount > this.reconnectTime) {
       this.changeNetworkState('fail');
       return this.onErr();

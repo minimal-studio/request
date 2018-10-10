@@ -5,7 +5,7 @@
 import { $request } from './request';
 import { CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass } from 'basic-helper';
 
-export class GateResSpeedTesterClass {
+class GateResSpeedTesterClass {
   constructor() {
     this.delayExec = new DebounceClass();
     /**
@@ -26,18 +26,6 @@ export class GateResSpeedTesterClass {
   getTestResult() {
     return this.testResult;
   }
-  // subscribeRes(func) {
-  //   this.eventEmitter.subscribe(this.resMark, func);
-  // }
-  // unsubscribeRes(func) {
-  //   this.eventEmitter.unsubscribe(this.resMark, func);
-  // }
-  // subscribeResDone(func) {
-  //   this.eventEmitter.subscribe(this.resDoneMark, func);
-  // }
-  // unsubscribeResDone(func) {
-  //   this.eventEmitter.unsubscribe(this.resDoneMark, func);
-  // }
   resetParams() {
     this.fastestTime = 1000;
     this.fastestIdx = -1;
@@ -74,14 +62,14 @@ export class GateResSpeedTesterClass {
   checkConfig() {
     let isPass = false;
     switch (true) {
-      case !Array.isArray(this.targetURLS) || this.targetURLS.length == 0:
-        console.log('gateUrls should be Array');
-        break;
-      case !this.targetURLS:
-        console.log('call setConfig({gateUrls: []}) first');
-        break;
-      default:
-        isPass = true;
+    case !Array.isArray(this.targetURLS) || this.targetURLS.length == 0:
+      console.log('gateUrls should be Array');
+      break;
+    case !this.targetURLS:
+      console.log('call setConfig({gateUrls: []}) first');
+      break;
+    default:
+      isPass = true;
     }
     return isPass;
   }
@@ -97,8 +85,6 @@ export class GateResSpeedTesterClass {
   async _request(url, originUrl, idx) {
     let startTime = Date.now();
 
-    let self = this;
-
     let isSuccess = await $request.get(url);
     let endTime = Date.now() - startTime;
 
@@ -113,15 +99,19 @@ export class GateResSpeedTesterClass {
       originUrl,
       t: endTime
     };
-    self.delayExec.exec(() => {
+    this.delayExec.exec(() => {
       let delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
       CallFunc(this.onRes)(delayResult);
-      self.testResult.push(delayResult);
-      window.localStorage.setItem('FASTEST_GATE', self.targetURLS[this.fastestIdx]);
-      if(self.testResult.length === self.targetURLS.length) {
+      this.testResult.push(delayResult);
+      window.localStorage.setItem('FASTEST_GATE', this.targetURLS[this.fastestIdx]);
+      if(this.testResult.length === this.targetURLS.length) {
         // test finished
-        CallFunc(self.onEnd)(delayResult);
+        CallFunc(this.onEnd)(delayResult);
       }
     }, 100);
   }
 }
+
+export {
+  GateResSpeedTesterClass
+};
