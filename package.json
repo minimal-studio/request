@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "0.12.9",
+  "version": "0.12.10",
   "description": "通讯加密，消息压缩，RESTFul, 异步事件",
   "scripts": {
     "publish": "npm publish ./build",
@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.0.0",
-    "basic-helper": "^1.4.3",
+    "basic-helper": "^1.4.4",
     "whatwg-fetch": "^3.0.0"
   }
 }
