@@ -22,7 +22,6 @@ export function searchUrlParams(searchStr) {
   return window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(searchStr).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1");
 }
 
-// TODO: 因为写法是 //，所以出现问题
 export function resolveUrl(baseUrl, ...paths) {
   if(!baseUrl) return console.log('please pass baseUrl');
   baseUrl = baseUrl.replace(/\/+$/, '');
