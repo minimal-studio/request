@@ -3,10 +3,15 @@
  */
 
 import { $request } from './request';
-import { CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass } from 'basic-helper';
+import {
+  CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass,
+  IsFunc
+} from 'basic-helper';
 
-class GateResSpeedTesterClass {
+class GateResSpeedTesterClass extends EventEmitterClass {
   constructor() {
+    super();
+    
     this.delayExec = new DebounceClass();
     /**
      * 用于存储测速后的结果集
@@ -16,12 +21,8 @@ class GateResSpeedTesterClass {
     this.targetURLS = [];
     this.testRes = {};
     this.suffix = '';
-    this.resMark = 'ON_REQ_RES';
-    this.resDoneMark = 'ON_REQ_DONE_RES';
     this.fastestTime = 1000;
     this.fastestIdx = -1;
-
-    this.eventEmitter = new EventEmitterClass();
   }
   getTestResult() {
     return this.testResult;
@@ -30,18 +31,16 @@ class GateResSpeedTesterClass {
     this.fastestTime = 1000;
     this.fastestIdx = -1;
   }
-  test() {
+  test = () => {
     if(!this.checkConfig()) return;
     this.resetParams();
     this.testResult = [];
-
-    let self = this;
 
     let tempIdx = 0;
     function loopReq(idx) {
       let originUrl = this.targetURLS[idx];
       let gate = originUrl + this.suffix;
-      self._request.call(this, gate, originUrl, idx);
+      this._request.call(this, gate, originUrl, idx);
       let nextIdx = idx += 1;
       if(nextIdx >= this.targetURLS.length) return;
       setTimeout(() => {
@@ -50,7 +49,7 @@ class GateResSpeedTesterClass {
     }
     loopReq.call(this, tempIdx);
 
-    return self;
+    return this;
   }
   setConfig({gateUrls, suffix}) {
     this.targetURLS = gateUrls;
@@ -82,7 +81,7 @@ class GateResSpeedTesterClass {
     if(!IsUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
-  async _request(url, originUrl, idx) {
+  _request = async (url, originUrl, idx) => {
     let startTime = Date.now();
 
     let isSuccess = await $request.get(url);
@@ -100,13 +99,15 @@ class GateResSpeedTesterClass {
       t: endTime
     };
     this.delayExec.exec(() => {
-      let delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
+      const delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
       CallFunc(this.onRes)(delayResult);
+      this.emit('res', delayResult);
       this.testResult.push(delayResult);
       window.localStorage.setItem('FASTEST_GATE', this.targetURLS[this.fastestIdx]);
       if(this.testResult.length === this.targetURLS.length) {
         // test finished
         CallFunc(this.onEnd)(delayResult);
+        this.emit('end', delayResult);
       }
     }, 100);
   }

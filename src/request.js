@@ -130,7 +130,7 @@ class RequestClass extends EventEmitterClass {
     return targetData;
   }
   urlFilter(path) {
-    if(/https?/.test(path)) return path;
+    if(/https?/.test(path) || /^[\/\/]/.test(path)) return path;
     let url = this.baseUrl;
     if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
     return resolveUrl(url, path);
