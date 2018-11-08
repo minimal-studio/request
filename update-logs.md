@@ -1,5 +1,9 @@
 # update logs
 
+## 0.12.12
+
+- 新增 patch 方法
+
 ## 0.12.11
 
 - 修复 url filter 的正则表达式的错误问题

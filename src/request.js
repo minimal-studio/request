@@ -92,6 +92,7 @@ class RequestClass extends EventEmitterClass {
     this.post = this._reqFactory('POST');
     this.put = this._reqFactory('PUT');
     this.del = this._reqFactory('DELETE');
+    this.patch = this._reqFactory('PATCH');
   }
   _reqFactory(method) {
     return (url, data, options = {}) => this.request(Object.assign(options, {
