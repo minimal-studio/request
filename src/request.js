@@ -130,11 +130,17 @@ class RequestClass extends EventEmitterClass {
     if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
-  urlFilter(path) {
+  urlFilter(path, params) {
     if(/https?/.test(path) || /^(\/\/)/.test(path)) return path;
     let url = this.baseUrl;
     if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
-    return resolveUrl(url, path);
+    url = resolveUrl(url, path);
+    if(params) url = wrapReqHashUrl({
+      url,
+      params,
+      toBase64: false
+    });
+    return url;
   }
   upload(path, data) {
     let _url = this.urlFilter(path);
@@ -145,27 +151,26 @@ class RequestClass extends EventEmitterClass {
     });
   }
   async get(url, options) {
-    let reqConfig = {
+    const isStringUrl = typeof url === 'string';
+    const reqConfig = isStringUrl ? {
       method: 'GET',
       url, ...options
+    } : {
+      ...url,
+      ...options,
+      method: 'GET',
     };
-
-    if(typeof url !== 'string') {
-      reqConfig.url = wrapReqHashUrl({
-        ...url,
-        toBase64: false
-      });
-    }
 
     return this.request(reqConfig);
   }
   async request({
-    url, data, headers, method = 'POST', isEncrypt = false, resolveRes = true, returnAll = false, ...other
+    url, data, headers, method = 'POST', params,
+    isEncrypt = false, returnAll = false, ...other
   }) {
-    let _url = this.urlFilter(url);
-    let _headers = isEncrypt ? headersMapper.html : headersMapper.js;
+    const _url = this.urlFilter(url, params);
+    const _headers = isEncrypt ? headersMapper.html : headersMapper.js;
     
-    let body = method == 'GET' ? {} : {
+    const body = method == 'GET' ? {} : {
       body: isEncrypt ? data : JSON.stringify(data)
     };
 

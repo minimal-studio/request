@@ -46,12 +46,20 @@ let res = await $R.get({
   isBase64: false // 用于加密 params 的值
 });
 
+// params 会作为 url 的 query 形式解析
+const options = {
+  params: {
+    ID: '123'
+  }
+}
+
 // post, 此方法只返回 res.data, 如果想要详情，可以订阅事件 onRes, 获取更多细节
-let res = await $R.post({
-  url: '/item-list',
-  headers: {},
-  data: {},
-});
+let postRes = await $R.post('/item-list', data, options);
+let patchRes = await $R.patch('/item-list', data, options);
+let delRes = await $R.del('/item-list', data, options);
+let putRes = await $R.put('/item-list', data, options);
+
+// 最后会以 host/item-list?ID=123 形式发送请求
 
 // 订阅 res 详细相应
 $R.on('onRes', (resDetail) => {
