@@ -165,7 +165,7 @@ class RequestClass extends EventEmitterClass {
   }
   async request({
     url, data, headers, method = 'POST', params,
-    isEncrypt = false, returnAll = false, onError = (e) => {}, ...other
+    isEncrypt = false, returnAll = false, onError = function(e){console.log(e)}, ...other
   }) {
     const _url = this.urlFilter(url, params);
     const _headers = isEncrypt ? headersMapper.html : headersMapper.js;
@@ -194,7 +194,6 @@ class RequestClass extends EventEmitterClass {
         resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
       } catch(e) {
         onError(e);
-        console.log(e);
       }
 
       Object.assign(result, {
@@ -207,7 +206,6 @@ class RequestClass extends EventEmitterClass {
       
     } catch(e) {
       onError(e);
-      console.log(e);
   
       Object.assign(result, {
         data: null,
