@@ -50,7 +50,8 @@ let res = await $R.get({
 const options = {
   params: {
     ID: '123'
-  }
+  },
+  onError: () => {} // 如果有此参数，则不会触发 $R.on('onErr') 的订阅事件
 }
 
 // post, 此方法只返回 res.data, 如果想要详情，可以订阅事件 onRes, 获取更多细节
