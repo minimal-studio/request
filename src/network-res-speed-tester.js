@@ -8,6 +8,12 @@ import {
   IsFunc
 } from 'basic-helper';
 
+/**
+ * 域名测速工具的构造器，给予 EventEmitter
+ *
+ * @class GateResSpeedTesterClass
+ * @extends {EventEmitterClass}
+ */
 class GateResSpeedTesterClass extends EventEmitterClass {
   constructor() {
     super();
@@ -24,13 +30,29 @@ class GateResSpeedTesterClass extends EventEmitterClass {
     this.fastestTime = 1000;
     this.fastestIdx = -1;
   }
+  /**
+   * 获取测速结果
+   *
+   * @returns {object}
+   * @memberof GateResSpeedTesterClass
+   */
   getTestResult() {
     return this.testResult;
   }
+  /**
+   * 重置所有参数
+   *
+   * @memberof GateResSpeedTesterClass
+   */
   resetParams() {
     this.fastestTime = 1000;
     this.fastestIdx = -1;
   }
+  /**
+   * 测试开始
+   *
+   * @memberof GateResSpeedTesterClass
+   */
   test = () => {
     if(!this.checkConfig()) return;
     this.resetParams();
@@ -51,13 +73,32 @@ class GateResSpeedTesterClass extends EventEmitterClass {
 
     return this;
   }
+  /**
+   * 设置配置
+   *
+   * @param {object} config {gateUrls, suffix}
+   * @memberof GateResSpeedTesterClass
+   */
   setConfig({gateUrls, suffix}) {
     this.targetURLS = gateUrls;
     this.suffix = suffix;
   }
+  /**
+   * 获取最快的域名的结果
+   *
+   * @returns {object}
+   * @memberof GateResSpeedTesterClass
+   */
   getFastestGate() {
     return window.localStorage.getItem('FASTEST_GATE') || this.getRandomURL();
   }
+  /**
+   * 检查配置是否符合规则
+   *
+   * @private
+   * @returns
+   * @memberof GateResSpeedTesterClass
+   */
   checkConfig() {
     let isPass = false;
     switch (true) {
@@ -72,6 +113,12 @@ class GateResSpeedTesterClass extends EventEmitterClass {
     }
     return isPass;
   }
+  /**
+   * 随机获取一个域名
+   *
+   * @returns {string}
+   * @memberof GateResSpeedTesterClass
+   */
   getRandomURL() {
     if(!this.checkConfig()) return;
     function _g() {
@@ -81,6 +128,12 @@ class GateResSpeedTesterClass extends EventEmitterClass {
     if(!IsUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
+  /**
+   * 发送测速请求
+   *
+   * @private
+   * @memberof GateResSpeedTesterClass
+   */
   _request = async (url, originUrl, idx) => {
     let startTime = Date.now();
 

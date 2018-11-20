@@ -1,0 +1,6 @@
+{
+  "source": "./src",
+  "destination": "./esdocs",
+  "excludes": ["./src/runtime.js", "./src/rc4.js", "./src/lzma_worker.js"],
+  "plugins": [{"name": "esdoc-standard-plugin"}]
+}

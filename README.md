@@ -69,6 +69,15 @@ $R.on('onRes', (resDetail) => {
     originReq: {},
   }
 });
+
+// 订阅 err 详细相应
+$R.on('onErr', (resDetail) => {
+  resDetail = {
+    data: {},
+    originRes: {},
+    originReq: {},
+  }
+});
 ```
 
 request 函数

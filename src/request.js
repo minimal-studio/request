@@ -63,6 +63,12 @@ function isResJson(res) {
   return /json/.test(getContentType(res));
 }
 
+/**
+ * Uke Request 请求对象的构造类
+ *
+ * @class RequestClass
+ * @extends {EventEmitterClass}
+ */
 class RequestClass extends EventEmitterClass {
   constructor(config) {
     super();
@@ -89,16 +95,18 @@ class RequestClass extends EventEmitterClass {
 
     Object.assign(this, this.defaultConfig, this.setConfig(config));
 
-    this.post = this._reqFactory('POST');
-    this.put = this._reqFactory('PUT');
-    this.del = this._reqFactory('DELETE');
-    this.patch = this._reqFactory('PATCH');
+    // this.post = this._reqFactory('POST');
+    // this.put = this._reqFactory('PUT');
+    // this.del = this._reqFactory('DELETE');
+    // this.patch = this._reqFactory('PATCH');
   }
-  _reqFactory(method) {
-    return (url, data, onError, options = {}) => this.request(Object.assign(options, {
-      url, data, method, onError
-    }));
-  }
+  /**
+   * 设置请求对象的配置
+   *
+   * @param {object} config {'compressLenLimit', 'baseUrl', 'timeout', 'reconnectTime', 'wallet', 'commonHeaders'}
+   * @returns {void}
+   * @memberof RequestClass
+   */
   setConfig(config) {
     if(!config) return {};
     /**
@@ -110,19 +118,45 @@ class RequestClass extends EventEmitterClass {
       }
     });
   }
+  /**
+   * 用于广播 response 事件
+   *
+   * @param {object} res request 返回的 res 对象
+   * @memberof RequestClass
+   */
   onRes(res) {
     // 获取完整的 res 对象
     this.emit(this.resMark, res);
   }
+  /**
+   * 用于广播 error 事件
+   *
+   * @param {object} res request 返回的 res 对象
+   * @memberof RequestClass
+   */
   onErr(res) {
     // 广播消息错误
     this.emit(this.errMark, res);
   }
+  /**
+   * 请求生命周期函数，在 res return 之前调用
+   *
+   * @param {object} resData
+   * @returns 外部调用，改变内部数据
+   * @memberof RequestClass
+   */
   setResDataHook(resData) {
     // 可以重写，用于做 resData 的业务处理
     console.log('set [$request.setResDataHook = func] first');
     return resData;
   }
+  /**
+   * 生命周期函数，在发送请求前调用
+   *
+   * @param {object} targetData 发送的数据
+   * @returns targetData
+   * @memberof RequestClass
+   */
   _wrapDataBeforeSend(targetData) {
     /**
      * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
@@ -130,6 +164,14 @@ class RequestClass extends EventEmitterClass {
     if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
     return targetData;
   }
+  /**
+   * 解析 url, 可以封装
+   *
+   * @param {string} path 路由
+   * @param {object} params 参数
+   * @returns {string}
+   * @memberof RequestClass
+   */
   urlFilter(path, params) {
     if(/https?/.test(path) || /^(\/\/)/.test(path)) return path;
     let url = this.baseUrl;
@@ -142,6 +184,14 @@ class RequestClass extends EventEmitterClass {
     });
     return url;
   }
+  /**
+   * 上传接口
+   *
+   * @param {object | string} path 路由字符串或者配置
+   * @param {object} data 发送的数据
+   * @returns {void}
+   * @memberof RequestClass
+   */
   upload(path, data) {
     let _url = this.urlFilter(path);
     return fetch(_url, {
@@ -150,6 +200,50 @@ class RequestClass extends EventEmitterClass {
       // headers: uploadHeader,
     });
   }
+  /**
+   * 发送 POST 请求
+   *
+   * @param {object | string} path 路由字符串或者配置
+   * @param {object} data 发送的数据
+   * @returns {promise}
+   * @memberof RequestClass
+   */
+  post = this._reqFactory('POST');
+  /**
+   * 发送 PUT 请求
+   *
+   * @param {object | string} path 路由字符串或者配置
+   * @param {object} data 发送的数据
+   * @returns {promise}
+   * @memberof RequestClass
+   */
+  put = this._reqFactory('PUT');
+  /**
+   * 发送 DELETE 请求
+   *
+   * @param {object | string} path 路由字符串或者配置
+   * @param {object} data 发送的数据
+   * @returns {promise}
+   * @memberof RequestClass
+   */
+  del = this._reqFactory('DELETE');
+  /**
+   * 发送 PATCH 请求
+   *
+   * @param {object | string} path 路由字符串或者配置
+   * @param {object} data 发送的数据
+   * @returns {promise}
+   * @memberof RequestClass
+   */
+  patch = this._reqFactory('PATCH');
+  /**
+   * 发送 Get 请求
+   *
+   * @param {object | string} url URL 字符串或者配置
+   * @param {object} options 配置
+   * @returns  {promise}
+   * @memberof RequestClass
+   */
   async get(url, options) {
     const isStringUrl = typeof url === 'string';
     const reqConfig = isStringUrl ? {
@@ -163,6 +257,28 @@ class RequestClass extends EventEmitterClass {
 
     return this.request(reqConfig);
   }
+  /**
+   * 请求对象生成器
+   *
+   * @param {string} method String
+   * @returns {promise} 生产的函数
+   * @memberof RequestClass
+   */
+  _reqFactory(method) {
+    return (url, data, onError, options = {}) => this.request(Object.assign(options, {
+      url, data, method, onError
+    }));
+  }
+  /**
+   * 底层请求接口，GET POST DELETE PATCH 的实际接口
+   *
+   * @param {object} {
+   *     url, data, headers, method = 'POST', params,
+   *     isEncrypt = false, returnAll = false, onError = function(e){console.log(e)}, ...other
+   *   }
+   * @returns {promise} 返回请求的 promise 对象
+   * @memberof RequestClass
+   */
   async request({
     url, data, headers, method = 'POST', params,
     isEncrypt = false, returnAll = false, onError = function(e){console.log(e)}, ...other
@@ -205,18 +321,24 @@ class RequestClass extends EventEmitterClass {
       this.onRes(result);
       
     } catch(e) {
-      onError(e);
+      /** 如果有传入 onError，则不广播全局的 onErr 事件 */
+      IsFunc(onError) ? onError(e) : this.onErr(e);
   
       Object.assign(result, {
         data: null,
         err: e
       });
-
-      this.onErr(e);
     }
 
     return returnAll ? result : result.data;
   }
+  /**
+   * 广播网络状态改变消息
+   *
+   * @param {string} state 消息状态
+   * @returns {void}
+   * @memberof RequestClass
+   */
   changeNetworkState(state) {
     if(state == this.connectState) return;
     this.emit('CHANGE_NETWORK_STATUS', {
@@ -224,6 +346,12 @@ class RequestClass extends EventEmitterClass {
     });
     this.connectState = state;
   }
+  /**
+   * 尝试断线重连
+   *
+   * @returns {void}
+   * @memberof RequestClass
+   */
   reconnect() {
     this.changeNetworkState('tryToConnecting');
 
@@ -238,6 +366,13 @@ class RequestClass extends EventEmitterClass {
 
     this.reconnectedCount++;
   }
+  /**
+   * 订成发送数据接口, 封装了通讯加密和压缩功能
+   *
+   * @param {object} options {sendData, url, path, wallet = this.wallet, method = 'POST', headers, onErr}
+   * @returns {promise}
+   * @memberof RequestClass
+   */
   async send({sendData, url, path, wallet = this.wallet, method = 'POST', headers, onErr}) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
