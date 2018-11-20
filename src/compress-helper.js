@@ -1,4 +1,4 @@
-import LZMA from './lzma_worker';
+import LZMA from './libs/lzma_worker';
 
 /**
  * 压缩数据

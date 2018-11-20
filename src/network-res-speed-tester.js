@@ -96,7 +96,7 @@ class GateResSpeedTesterClass extends EventEmitterClass {
    * 检查配置是否符合规则
    *
    * @private
-   * @returns
+   * @returns {boolean}
    * @memberof GateResSpeedTesterClass
    */
   checkConfig() {

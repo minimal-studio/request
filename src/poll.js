@@ -181,7 +181,7 @@ export default class PollMethod {
   /**
    * 等待上一个轮询结束后再次发起下一个轮询
    *
-   * @returns
+   * @returns {void}
    * @memberof PollMethod
    */
   _loopPollWhenReqDone() {
