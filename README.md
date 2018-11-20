@@ -5,6 +5,8 @@
 
 基于 window.fetch 的拓展封装库, 基于异步事件监听机制
 
+- [在线文档](https://request.ukelli.com/)
+
 ## 提供的能力
 
 - 消息压缩
