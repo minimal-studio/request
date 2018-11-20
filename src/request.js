@@ -95,8 +95,8 @@ class RequestClass extends EventEmitterClass {
     this.patch = this._reqFactory('PATCH');
   }
   _reqFactory(method) {
-    return (url, data, options = {}) => this.request(Object.assign(options, {
-      url, data, method
+    return (url, data, onError, options = {}) => this.request(Object.assign(options, {
+      url, data, method, onError
     }));
   }
   setConfig(config) {
@@ -165,7 +165,7 @@ class RequestClass extends EventEmitterClass {
   }
   async request({
     url, data, headers, method = 'POST', params,
-    isEncrypt = false, returnAll = false, ...other
+    isEncrypt = false, returnAll = false, onError = (e) => {}, ...other
   }) {
     const _url = this.urlFilter(url, params);
     const _headers = isEncrypt ? headersMapper.html : headersMapper.js;
@@ -193,6 +193,7 @@ class RequestClass extends EventEmitterClass {
       try {
         resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
       } catch(e) {
+        onError(e);
         console.log(e);
       }
 
@@ -205,8 +206,9 @@ class RequestClass extends EventEmitterClass {
       this.onRes(result);
       
     } catch(e) {
+      onError(e);
       console.log(e);
-
+  
       Object.assign(result, {
         data: null,
         err: e
