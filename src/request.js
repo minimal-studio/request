@@ -265,8 +265,8 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   _reqFactory(method) {
-    return (url, data, onError, options = {}) => this.request(Object.assign(options, {
-      url, data, method, onError
+    return (url, data, options = {}) => this.request(Object.assign(options, {
+      url, data, method
     }));
   }
   /**
@@ -281,7 +281,7 @@ class RequestClass extends EventEmitterClass {
    */
   async request({
     url, data, headers, method = 'POST', params,
-    isEncrypt = false, returnAll = false, onError = function(e){console.log(e)}, ...other
+    isEncrypt = false, returnAll = false, onError = this.onErr, ...other
   }) {
     const _url = this.urlFilter(url, params);
     const _headers = isEncrypt ? headersMapper.html : headersMapper.js;
@@ -322,7 +322,8 @@ class RequestClass extends EventEmitterClass {
       
     } catch(e) {
       /** 如果有传入 onError，则不广播全局的 onErr 事件 */
-      IsFunc(onError) ? onError(e) : this.onErr(e);
+      // IsFunc(onError) ? onError(e) : this.onErr(e);
+      onError();
   
       Object.assign(result, {
         data: null,
