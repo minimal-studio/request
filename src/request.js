@@ -64,6 +64,33 @@ function isResJson(res) {
 }
 
 /**
+ * 私有的检查状态函数
+ *
+ * @param {*} fetchRes
+ * @returns {boolean}
+ * @private
+ */
+function _checkStatus(fetchRes) {
+  return this.checkStatus(fetchRes);
+}
+
+/**
+ * 生命周期函数，在发送请求前调用
+ *
+ * @param {object} targetData 发送的数据
+ * @returns targetData
+ * @memberof RequestClass
+ * @private
+ */
+function _wrapDataBeforeSend(targetData) {
+  /**
+   * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
+   */
+  if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
+  return targetData;
+}
+
+/**
  * Uke Request 请求对象的构造类
  *
  * @class RequestClass
@@ -149,20 +176,6 @@ class RequestClass extends EventEmitterClass {
     // 可以重写，用于做 resData 的业务处理
     console.log('set [$request.setResDataHook = func] first');
     return resData;
-  }
-  /**
-   * 生命周期函数，在发送请求前调用
-   *
-   * @param {object} targetData 发送的数据
-   * @returns targetData
-   * @memberof RequestClass
-   */
-  _wrapDataBeforeSend(targetData) {
-    /**
-     * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
-     */
-    if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
-    return targetData;
   }
   /**
    * 解析 url, 可以封装
@@ -270,9 +283,18 @@ class RequestClass extends EventEmitterClass {
     }));
   }
   /**
+   * 可以被重写的状态判断函数
+   *
+   * @returns {boolean}
+   * @memberof RequestClass
+   */
+  checkStatus() {
+    return true;
+  }
+  /**
    * 底层请求接口，GET POST DELETE PATCH 的实际接口
    *
-   * @param {object} {
+   * @param {object} options {
    *     url, data, headers, method = 'POST', params,
    *     isEncrypt = false, returnAll = false, onError = function(e){console.log(e)}, ...other
    *   }
@@ -301,7 +323,15 @@ class RequestClass extends EventEmitterClass {
 
     try {
 
+      /** 1. 尝试发送远端请求 */
       let fetchRes = await fetch(_url, fetchOptions);
+
+      /** 2. 尝试对远端的 res 进行 status 判定 */
+      const isPass = _checkStatus.call(this, fetchRes);
+
+      /** 3. 如果不成功，则直接抛出错误, 给下面的 catch 捕捉 */
+      if(!isPass) throw fetchRes;
+      
       let isJsonRes = isResJson(fetchRes);
 
       let resData = {};
@@ -379,7 +409,7 @@ class RequestClass extends EventEmitterClass {
       targetData: sendData.data || sendData.Data,
       originData: sendData,
       compressLenLimit: this.compressLenLimit,
-      beforeEncryptHook: this._wrapDataBeforeSend.bind(this),
+      beforeEncryptHook: _wrapDataBeforeSend.bind(this),
       wallet
     });
 
