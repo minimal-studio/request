@@ -16,6 +16,17 @@
 - 简易轮询机制
 - [引用方式](./docs/import-desc.md)
 
+## 请求处理流程
+
+RESTFul API 的运作流程
+
+1. Get Post Del
+2. request
+3. parseRes
+4. checkStatus
+    - if false, 触发 onErr
+5. end
+
 ## 使用
 
 ### 使用方式
@@ -53,7 +64,12 @@ const options = {
   params: {
     ID: '123'
   },
-  onError: () => {} // 如果有此参数，则不会触发 $R.on('onErr') 的订阅事件
+  onError: () => {} // 每一个消息都可以做独立的错误处理，如果有此参数，则不会触发 $R.on('onErr') 的订阅事件
+}
+
+// 统一的检查 res status 的状态，如果 return false，则触发 onErr
+$R.checkStatus = (originRes) => {
+  return true;
 }
 
 // post, 此方法只返回 res.data, 如果想要详情，可以订阅事件 onRes, 获取更多细节
@@ -73,7 +89,7 @@ $R.on('onRes', (resDetail) => {
   }
 });
 
-// 订阅 err 详细相应
+// 统一的 err 详细相应
 $R.on('onErr', (resDetail) => {
   resDetail = {
     data: {},

@@ -1,4 +1,8 @@
-# update logs
+# Update logs of Uke-request
+
+## 0.12.15
+
+- 优化错误处理机制
 
 ## 0.12.14
 

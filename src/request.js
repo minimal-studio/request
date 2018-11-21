@@ -134,7 +134,7 @@ class RequestClass extends EventEmitterClass {
    * @returns {void}
    * @memberof RequestClass
    */
-  setConfig(config) {
+  setConfig = (config) => {
     if(!config) return {};
     /**
      * 避免被设置其他字段
@@ -151,7 +151,7 @@ class RequestClass extends EventEmitterClass {
    * @param {object} res request 返回的 res 对象
    * @memberof RequestClass
    */
-  onRes(res) {
+  onRes = (res) => {
     // 获取完整的 res 对象
     this.emit(this.resMark, res);
   }
@@ -161,7 +161,7 @@ class RequestClass extends EventEmitterClass {
    * @param {object} res request 返回的 res 对象
    * @memberof RequestClass
    */
-  onErr(res) {
+  onErr = (res) => {
     // 广播消息错误
     this.emit(this.errMark, res);
   }
@@ -185,7 +185,7 @@ class RequestClass extends EventEmitterClass {
    * @returns {string}
    * @memberof RequestClass
    */
-  urlFilter(path, params) {
+  urlFilter = (path, params) => {
     if(/https?/.test(path) || /^(\/\/)/.test(path)) return path;
     let url = this.baseUrl;
     if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
@@ -205,7 +205,7 @@ class RequestClass extends EventEmitterClass {
    * @returns {void}
    * @memberof RequestClass
    */
-  upload(path, data) {
+  upload = (path, data) => {
     let _url = this.urlFilter(path);
     return fetch(_url, {
       method: 'POST',
@@ -323,14 +323,8 @@ class RequestClass extends EventEmitterClass {
 
     try {
 
-      /** 1. 尝试发送远端请求 */
+      /** 1. 尝试发送远端请求, 并解析结果 */
       let fetchRes = await fetch(_url, fetchOptions);
-
-      /** 2. 尝试对远端的 res 进行 status 判定 */
-      const isPass = _checkStatus.call(this, fetchRes);
-
-      /** 3. 如果不成功，则直接抛出错误, 给下面的 catch 捕捉 */
-      if(!isPass) throw fetchRes;
       
       let isJsonRes = isResJson(fetchRes);
 
@@ -348,12 +342,25 @@ class RequestClass extends EventEmitterClass {
         originReq: fetchOptions
       });
 
+      /** 2. 尝试对远端的 res 进行 status 判定 */
+      const isPass = _checkStatus.call(this, fetchRes);
+
+      /** 3. 如果不成功，则返回包装过的信息 */
+      if(!isPass) {
+        const checkInfo = {
+          ...result,
+          err: 'checkStatus false.',
+        };
+        onError(checkInfo);
+        return returnAll ? checkInfo : checkInfo.data;
+      }
+
       this.onRes(result);
       
     } catch(e) {
       /** 如果有传入 onError，则不广播全局的 onErr 事件 */
       // IsFunc(onError) ? onError(e) : this.onErr(e);
-      onError();
+      onError(e);
   
       Object.assign(result, {
         data: null,
@@ -404,7 +411,10 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  async send({sendData, url, path, wallet = this.wallet, method = 'POST', headers, onErr}) {
+  async send({
+    sendData, url, path, wallet = this.wallet, 
+    method = 'POST', headers, onErr = this.onErr
+  }) {
     const sendDataFilterResult = await getCompressAndEnctyptDataAsync({
       targetData: sendData.data || sendData.Data,
       originData: sendData,
