@@ -2,11 +2,12 @@
  * 网络测速
  */
 
-import { $request } from './request';
+import { RequestClass } from './request';
 import {
-  CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass,
-  IsFunc
+  CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass, IsFunc
 } from 'basic-helper';
+
+const $request = new RequestClass();
 
 /**
  * 域名测速工具的构造器，给予 EventEmitter

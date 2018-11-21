@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 0.13.0
+
+- 新增 resPipe API，用于过滤响应
+
 ## 0.12.15
 
 - 优化错误处理机制

@@ -18,14 +18,25 @@
 
 ## 请求处理流程
 
-RESTFul API 的运作流程
+Uke request 对于请求发起的内部运作流程，以及 data 过滤器的生命周期说明
 
-1. Get Post Del
-2. request
-3. parseRes
-4. checkStatus
-    - if false, 触发 onErr
-5. end
+```js
+// 此顶层调用会执行以下过滤器和钩子函数，最终得到 res
+const res = await $request.get(params);
+```
+
+1. 发起顶层调用 get, [ post del put post patch send 同理 ]
+2. 统一通过 $request.request 处理
+3. 通过一些处理请求的生命周期 parseRes 函数
+    1. 通过 resPipe 注册的链式过滤返回数据
+        - 通过 $request.resPipe((resData) => { resData.customer = {}; return resData }) 注册，有先后顺序
+    2. checkStatus 自定义检查 status 状态方式
+        - if false, 触发 onErr
+4. end 请求结束，返回 res
+
+Send 通讯加密和压缩计算
+
+1. TODO
 
 ## 使用
 
@@ -77,6 +88,12 @@ let postRes = await $R.post('/item-list', data, options);
 let patchRes = await $R.patch('/item-list', data, options);
 let delRes = await $R.del('/item-list', data, options);
 let putRes = await $R.put('/item-list', data, options);
+
+// 通过 pipe 注册过滤器
+$R.resPipe((data) => {
+  data.test = true;
+  return data;
+});
 
 // 最后会以 host/item-list?ID=123 形式发送请求
 

@@ -5,14 +5,15 @@ import LZMA from './libs/lzma_worker';
  *
  * @export
  * @param {object} options {data, compressLenLimit = 2048}
- * @returns {promise}
+ * @returns {promise} { isCompress: boolean, data: data }
  */
-export function compressFilter({data, compressLenLimit = 2048}) {
+export function compressFilter({ data, compressLenLimit = 2048, compress }) {
   return new Promise((resolve, reject) => {
     let resultObj = {
       isCompress: false,
       data,
     }
+    if(!compress || !data) return resolve(resultObj);
     let strPostData = JSON.stringify(data);
 
     if(strPostData.length > compressLenLimit) {
