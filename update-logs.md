@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 0.13.1
+
+- 修复压缩过滤的问题
+
 ## 0.13.0
 
 - 新增 resPipe API，用于过滤响应

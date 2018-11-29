@@ -94,16 +94,6 @@ function _wrapDataBeforeSend(targetData) {
   return targetData;
 }
 
-function execPipeQueue(targetData, targetQueue) {
-  if(!targetQueue || !IsObj(targetData)) return targetData;
-  let resData = {...targetData};
-  for (const pipeFunc of targetQueue) {
-    if(!IsFunc(pipeFunc)) continue;
-    resData = pipeFunc(resData);
-  }
-  return resData;
-}
-
 /**
  * Uke Request 请求对象的构造类
  *
@@ -145,6 +135,15 @@ class RequestClass extends EventEmitterClass {
     // this.patch = this._reqFactory('PATCH');
 
     this.resPipe(this._setResDataHook());
+  }
+  execPipeQueue(targetData, targetQueue) {
+    if(!targetQueue || !IsObj(targetData)) return targetData;
+    let resData = {...targetData};
+    for (const pipeFunc of targetQueue) {
+      if(!IsFunc(pipeFunc)) continue;
+      resData = pipeFunc(resData);
+    }
+    return resData;
   }
   /**
    * 设置请求对象的配置
@@ -399,7 +398,7 @@ class RequestClass extends EventEmitterClass {
       // }
 
       /** 执行 resPipe 的时机 */
-      resData = execPipeQueue.call(this, resData, this.resPipeQueue);
+      if(typeof resData !== 'string') resData = this.execPipeQueue({...resData}, this.resPipeQueue);
 
       Object.assign(result, {
         data: resData,
@@ -503,7 +502,8 @@ class RequestClass extends EventEmitterClass {
     });
 
     if(HasValue(postResData)) {
-      let dataFilterRes = decryptFilter({data: postResData, wallet});
+      let _dataFilterRes = decryptFilter({data: postResData, wallet});
+      let dataFilterRes = this._setResDataHook()(_dataFilterRes);
 
       if(HasValue(dataFilterRes.data)) {
         this.changeNetworkState('ok');
