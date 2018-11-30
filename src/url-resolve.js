@@ -148,7 +148,7 @@ export function fromBase64Str(str) {
  */
 export function openWindowUseHashUrl(options, windowParamStr) {
   let windowObj = window.open(
-    wrapReqHashUrl(hashOptions),
+    wrapReqHashUrl(options),
     null,
     windowParamStr
   );

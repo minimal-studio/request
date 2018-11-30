@@ -207,7 +207,7 @@ class RequestClass extends EventEmitterClass {
     // 可以重写，用于做 resData 的业务处理
     // console.log('set [$request.setResDataHook = func] first');
     if(this.setResDataHook) {
-      console.warn('setResDataHook 要被废弃了，请使用新接口 resPipe()');
+      // console.warn('setResDataHook 要被废弃了，请使用新接口 resPipe()');
       return (resData) => this.setResDataHook(resData);
     }
     // return resData;
