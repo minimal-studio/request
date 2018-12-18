@@ -183,7 +183,7 @@ class RequestClass extends EventEmitterClass {
     if(IsFunc(pipeFunc)) {
       targetQueue.push(pipeFunc);
     } else {
-      console.warn('pipeFunc need to be a function')
+      // console.warn('pipeFunc need to be a function')
     }
   }
   /**
