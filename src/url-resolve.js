@@ -17,7 +17,7 @@ export function getUrlParams(key, href) {
   if(!_href) return;
   let searchs = _href.split('?')[1];
   let resultObj = {};
-  if(!searchs) return '';
+  if(!searchs) return {};
   let params = searchs.split(/&+/);
   params.forEach(item => {
     let [key, val] = item.split('=');
