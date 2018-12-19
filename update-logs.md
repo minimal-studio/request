@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 0.13.4
+
+- 调整 getUrlParams 匹配不到时返回的内容
+
 ## 0.13.3
 
 - 去除提示
