@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 0.13.4
+
+- 调整轮询函数的功能
+
 ## 0.13.3
 
 - 去除提示

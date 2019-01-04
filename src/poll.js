@@ -54,18 +54,19 @@
  * @export
  * @class PollMethod
  */
+const defaultPollData = {
+  Params: []
+};
 export default class PollMethod {
-  constructor(pollFreq = 2, pollMethod = 'poll') {
+  constructor(pollFreq = 2, pollMethod = 'poll', defaultPollData = defaultPollData) {
     // super();
 
     this.pollFreq = pollFreq * 1000;
     this.pollTime = 0;
     this.pollData = {
       method: pollMethod,
-      data: {
-        Params: []
-      }
-    }
+      data: defaultPollData
+    };
     this.pollUrl = '';
     this.timer = null;
     this.isStarted = false;
@@ -94,7 +95,7 @@ export default class PollMethod {
   start() {
     if(!this.isStarted && this.checkConfig()) {
       this.pollTime = 1;
-      this.startPolling();
+      this.startPoll();
       this.isStarted = true;
     }
   }
@@ -107,14 +108,14 @@ export default class PollMethod {
   checkConfig() {
     let isPass = false;
     switch (true) {
-      case !this.$request:
-        console.log('please call setReqObj($request)');
-        break;
-      case !this.pollUrl:
-        console.log('please call setPollUrl(pollUrl)');
-        break;
-      default:
-        isPass = true;
+    case !this.$request:
+      console.log('please call setReqObj($request)');
+      break;
+    case !this.pollUrl:
+      console.log('please call setPollUrl(pollUrl)');
+      break;
+    default:
+      isPass = true;
     }
     return isPass;
   }
@@ -171,7 +172,7 @@ export default class PollMethod {
    *
    * @memberof PollMethod
    */
-  startPolling() {
+  startPoll() {
     // let self = this;
     // this.timer = setTimeout(() => {
     //   self.startPolling();
@@ -186,9 +187,8 @@ export default class PollMethod {
    */
   _loopPollWhenReqDone() {
     if(!this.isStarted) return;
-    let self = this;
     this.timer = setTimeout(() => {
-      self.polling();
+      this.polling();
     }, this.pollFreq);
   }
   /**
@@ -217,19 +217,26 @@ export default class PollMethod {
    * @returns {object}
    * @memberof PollMethod
    */
-  async polling() {
-    const self = this;
-    const pollDataParams = this._wrapPollData(); // 获取轮询的参数
-    const {allPollConfig, configIdConfigMapper} = pollDataParams;
-    if (allPollConfig.length == 0) return; // 如果没有参数, 就不发起请求轮询
-    let _pollData = Object.assign({}, this.pollData, {
+  wrapData(allPollConfig) {
+    return {
       data: {
         Params: allPollConfig
       }
-    });
-    const sendResData = await this.$request.send({
+    };
+  }
+  async sendData(_pollData) {
+    return await this.$request.send({
       sendData: _pollData, url: this.pollUrl
     });
+  }
+  async polling() {
+    const pollDataParams = this._wrapPollData(); // 获取轮询的参数
+    const { allPollConfig, configIdConfigMapper } = pollDataParams;
+    if (allPollConfig.length == 0) return; // 如果没有参数, 就不发起请求轮询
+    let _pollData = Object.assign({}, this.pollData, this.wrapData(allPollConfig));
+
+    const sendResData = await this.sendData(_pollData);
+
     let data = sendResData.data;
     for (var dataKey in data) {
       let configMapped = configIdConfigMapper[dataKey];
