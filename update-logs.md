@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 0.13.5
+
+- 升级依赖库
+
 ## 0.13.4
 
 - 调整轮询函数的功能
