@@ -1,7 +1,8 @@
 /**
- * 轮询模块
- * 用法
  *
+ * 轮询模块
+ * 
+ * @example
  * const pollEntity = new PollMethod(pollFreq); [pollFreq 为轮询一次的频率，单位为秒]
  * pollEntity.onRes = pollHandle;
  * pollEntity.setPollConfig({
@@ -14,9 +15,6 @@
  *     }
  *   }
  * })
- *
- * 使用方法
- *
  * 定义回调函数
  * function pollHandle(res) {
  * const {resData, api, id} = res;
@@ -28,17 +26,17 @@
  *
  * 定义 config
  * let pollConfig = {
-   ID: {
-     freq: 1,
-     callback: pollHandle,
-     api: APIS.QUERY_USER_FOR_POLLING, // 必须的
-     getData() {                       // 必须的
-       return {
-         data
-       };
-     }
-   }
- };
+ * ID: {
+ *    freq: 1,
+ *    callback: pollHandle,
+ *    api: APIS.QUERY_USER_FOR_POLLING, // 必须的
+ *    getData() {                       // 必须的
+ *      return {
+ *        data
+ *      };
+ *    }
+ *  }
+ *};
  *
  * new 一个轮询对象
  * const PollingEntity = new PollMethod(freq = 2);
@@ -52,20 +50,23 @@
  *
  * 停止轮询
  * PollingEntity.stop()
+ *
+ * @export
+ * @class PollMethod
  */
-
+const defaultPollData = {
+  Params: []
+};
 export default class PollMethod {
-  constructor(pollFreq = 2, pollMethod = 'poll') {
+  constructor(pollFreq = 2, pollMethod = 'poll', defaultPollData = defaultPollData) {
     // super();
 
     this.pollFreq = pollFreq * 1000;
     this.pollTime = 0;
     this.pollData = {
       method: pollMethod,
-      data: {
-        Params: []
-      }
-    }
+      data: defaultPollData
+    };
     this.pollUrl = '';
     this.timer = null;
     this.isStarted = false;
@@ -86,58 +87,116 @@ export default class PollMethod {
      */
     this.pollDataSet = {};
   }
+  /**
+   * 轮询开始
+   *
+   * @memberof PollMethod
+   */
   start() {
     if(!this.isStarted && this.checkConfig()) {
       this.pollTime = 1;
-      this.startPolling();
+      this.startPoll();
       this.isStarted = true;
     }
   }
+  /**
+   * 检查配置是否符合预期
+   *
+   * @returns {boolen} 是否符合预期
+   * @memberof PollMethod
+   */
   checkConfig() {
     let isPass = false;
     switch (true) {
-      case !this.$request:
-        console.log('please call setReqObj($request)');
-        break;
-      case !this.pollUrl:
-        console.log('please call setPollUrl(pollUrl)');
-        break;
-      default:
-        isPass = true;
+    case !this.$request:
+      console.log('please call setReqObj($request)');
+      break;
+    case !this.pollUrl:
+      console.log('please call setPollUrl(pollUrl)');
+      break;
+    default:
+      isPass = true;
     }
     return isPass;
   }
+  /**
+   * 设置轮询用到的请求对象
+   *
+   * @param {$request} reqObj 请求对象，可以使用 $request
+   * @memberof PollMethod
+   */
   setReqObj(reqObj) {
     this.$request = reqObj;
   }
+  /**
+   * 设置轮询地址
+   *
+   * @param {string} url 地址
+   * @memberof PollMethod
+   */
   setPollUrl(url) {
     this.pollUrl = url;
   }
-  setPollConfig(data) {
-    if (typeof data != 'object') return console.error('this interface expect parameter of Object');
-    this.pollDataSet = data;
+  /**
+   * 设置轮询的数据配置
+   *
+   * @param {object} config
+   * @returns {void}
+   * @memberof PollMethod
+   */
+  setPollConfig(config) {
+    if (typeof config != 'object') return console.error('this interface expect parameter of Object');
+    this.pollDataSet = config;
   }
-  addConfig(data) {
-    Object.assign(this.pollDataSet, data);
+  /**
+   * 往已存在的轮询数据配置中添加数据配置
+   *
+   * @param {object} config
+   * @memberof PollMethod
+   */
+  addConfig(config) {
+    Object.assign(this.pollDataSet, config);
   }
+  /**
+   * 移除轮询数据配置
+   *
+   * @param {string} key 配置的 key
+   * @memberof PollMethod
+   */
   removeConfig(key) {
     let keyArr = Array.isArray(key) ? key : [key];
     keyArr.forEach(item => delete this.pollDataSet[item]);
   }
-  startPolling() {
+  /**
+   * 开始轮询
+   *
+   * @memberof PollMethod
+   */
+  startPoll() {
     // let self = this;
     // this.timer = setTimeout(() => {
     //   self.startPolling();
     // }, this.pollFreq);
     this.polling();
   }
-  loopPollWhenReqDone() {
+  /**
+   * 等待上一个轮询结束后再次发起下一个轮询
+   *
+   * @returns {void}
+   * @memberof PollMethod
+   */
+  _loopPollWhenReqDone() {
     if(!this.isStarted) return;
-    let self = this;
     this.timer = setTimeout(() => {
-      self.polling();
+      this.polling();
     }, this.pollFreq);
   }
+  /**
+   * 封装轮询请求数据
+   *
+   * @returns {object}
+   * @memberof PollMethod
+   */
   _wrapPollData() {
     let allPollConfig = [];
     let configIdConfigMapper = {};
@@ -152,19 +211,32 @@ export default class PollMethod {
     }
     return {allPollConfig, configIdConfigMapper};
   }
-  async polling() {
-    const self = this;
-    const pollDataParams = this._wrapPollData(); // 获取轮询的参数
-    const {allPollConfig, configIdConfigMapper} = pollDataParams;
-    if (allPollConfig.length == 0) return; // 如果没有参数, 就不发起请求轮询
-    let _pollData = Object.assign({}, this.pollData, {
+  /**
+   * 轮询中的接口
+   *
+   * @returns {object}
+   * @memberof PollMethod
+   */
+  wrapData(allPollConfig) {
+    return {
       data: {
         Params: allPollConfig
       }
-    });
-    const sendResData = await this.$request.send({
+    };
+  }
+  async sendData(_pollData) {
+    return await this.$request.send({
       sendData: _pollData, url: this.pollUrl
     });
+  }
+  async polling() {
+    const pollDataParams = this._wrapPollData(); // 获取轮询的参数
+    const { allPollConfig, configIdConfigMapper } = pollDataParams;
+    if (allPollConfig.length == 0) return; // 如果没有参数, 就不发起请求轮询
+    let _pollData = Object.assign({}, this.pollData, this.wrapData(allPollConfig));
+
+    const sendResData = await this.sendData(_pollData);
+
     let data = sendResData.data;
     for (var dataKey in data) {
       let configMapped = configIdConfigMapper[dataKey];
@@ -177,8 +249,13 @@ export default class PollMethod {
         });
       }
     }
-    this.loopPollWhenReqDone();
+    this._loopPollWhenReqDone();
   }
+  /**
+   * 停止轮询
+   *
+   * @memberof PollMethod
+   */
   stop() {
     if (this.timer) clearTimeout(this.timer);
     this.isStarted = false;

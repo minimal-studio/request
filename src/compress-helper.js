@@ -1,11 +1,19 @@
-import LZMA from './lzma_worker';
+import LZMA from './libs/lzma_worker';
 
-export function compressFilter({data, compressLenLimit = 2048}) {
+/**
+ * 压缩数据
+ *
+ * @export
+ * @param {object} options {data, compressLenLimit = 2048}
+ * @returns {promise} { isCompress: boolean, data: data }
+ */
+export function compressFilter({ data, compressLenLimit = 2048, compress }) {
   return new Promise((resolve, reject) => {
     let resultObj = {
       isCompress: false,
       data,
     }
+    if(!compress || !data) return resolve(resultObj);
     let strPostData = JSON.stringify(data);
 
     if(strPostData.length > compressLenLimit) {
@@ -19,6 +27,14 @@ export function compressFilter({data, compressLenLimit = 2048}) {
     }
   });
 }
+
+/**
+ * 解压数据
+ *
+ * @export
+ * @param {string} data 压缩后的字符串
+ * @returns {string}
+ */
 export function decompressFilter(data) {
   return new Promise((resolve, reject) => {
     let isCompress = typeof data == 'string';

@@ -2,11 +2,23 @@
  * 网络测速
  */
 
-import { $request } from './request';
-import { CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass } from 'basic-helper';
+import { RequestClass } from './request';
+import {
+  CallFunc, DebounceClass, IsUrl, Random, EventEmitterClass, IsFunc
+} from 'basic-helper';
 
-export class GateResSpeedTesterClass {
+const $request = new RequestClass();
+
+/**
+ * 域名测速工具的构造器，给予 EventEmitter
+ *
+ * @class GateResSpeedTesterClass
+ * @extends {EventEmitterClass}
+ */
+class GateResSpeedTesterClass extends EventEmitterClass {
   constructor() {
+    super();
+    
     this.delayExec = new DebounceClass();
     /**
      * 用于存储测速后的结果集
@@ -16,44 +28,42 @@ export class GateResSpeedTesterClass {
     this.targetURLS = [];
     this.testRes = {};
     this.suffix = '';
-    this.resMark = 'ON_REQ_RES';
-    this.resDoneMark = 'ON_REQ_DONE_RES';
     this.fastestTime = 1000;
     this.fastestIdx = -1;
-
-    this.eventEmitter = new EventEmitterClass();
   }
+  /**
+   * 获取测速结果
+   *
+   * @returns {object}
+   * @memberof GateResSpeedTesterClass
+   */
   getTestResult() {
     return this.testResult;
   }
-  // subscribeRes(func) {
-  //   this.eventEmitter.subscribe(this.resMark, func);
-  // }
-  // unsubscribeRes(func) {
-  //   this.eventEmitter.unsubscribe(this.resMark, func);
-  // }
-  // subscribeResDone(func) {
-  //   this.eventEmitter.subscribe(this.resDoneMark, func);
-  // }
-  // unsubscribeResDone(func) {
-  //   this.eventEmitter.unsubscribe(this.resDoneMark, func);
-  // }
+  /**
+   * 重置所有参数
+   *
+   * @memberof GateResSpeedTesterClass
+   */
   resetParams() {
     this.fastestTime = 1000;
     this.fastestIdx = -1;
   }
-  test() {
+  /**
+   * 测试开始
+   *
+   * @memberof GateResSpeedTesterClass
+   */
+  test = () => {
     if(!this.checkConfig()) return;
     this.resetParams();
     this.testResult = [];
-
-    let self = this;
 
     let tempIdx = 0;
     function loopReq(idx) {
       let originUrl = this.targetURLS[idx];
       let gate = originUrl + this.suffix;
-      self._request.call(this, gate, originUrl, idx);
+      this._request.call(this, gate, originUrl, idx);
       let nextIdx = idx += 1;
       if(nextIdx >= this.targetURLS.length) return;
       setTimeout(() => {
@@ -62,29 +72,54 @@ export class GateResSpeedTesterClass {
     }
     loopReq.call(this, tempIdx);
 
-    return self;
+    return this;
   }
+  /**
+   * 设置配置
+   *
+   * @param {object} config {gateUrls, suffix}
+   * @memberof GateResSpeedTesterClass
+   */
   setConfig({gateUrls, suffix}) {
     this.targetURLS = gateUrls;
     this.suffix = suffix;
   }
+  /**
+   * 获取最快的域名的结果
+   *
+   * @returns {object}
+   * @memberof GateResSpeedTesterClass
+   */
   getFastestGate() {
     return window.localStorage.getItem('FASTEST_GATE') || this.getRandomURL();
   }
+  /**
+   * 检查配置是否符合规则
+   *
+   * @private
+   * @returns {boolean}
+   * @memberof GateResSpeedTesterClass
+   */
   checkConfig() {
     let isPass = false;
     switch (true) {
-      case !Array.isArray(this.targetURLS) || this.targetURLS.length == 0:
-        console.log('gateUrls should be Array');
-        break;
-      case !this.targetURLS:
-        console.log('call setConfig({gateUrls: []}) first');
-        break;
-      default:
-        isPass = true;
+    case !Array.isArray(this.targetURLS) || this.targetURLS.length == 0:
+      console.log('gateUrls should be Array');
+      break;
+    case !this.targetURLS:
+      console.log('call setConfig({gateUrls: []}) first');
+      break;
+    default:
+      isPass = true;
     }
     return isPass;
   }
+  /**
+   * 随机获取一个域名
+   *
+   * @returns {string}
+   * @memberof GateResSpeedTesterClass
+   */
   getRandomURL() {
     if(!this.checkConfig()) return;
     function _g() {
@@ -94,10 +129,14 @@ export class GateResSpeedTesterClass {
     if(!IsUrl(__r)) __r = this.getRandomURL.call(this);
     return __r;
   }
-  async _request(url, originUrl, idx) {
+  /**
+   * 发送测速请求
+   *
+   * @private
+   * @memberof GateResSpeedTesterClass
+   */
+  _request = async (url, originUrl, idx) => {
     let startTime = Date.now();
-
-    let self = this;
 
     let isSuccess = await $request.get(url);
     let endTime = Date.now() - startTime;
@@ -113,15 +152,21 @@ export class GateResSpeedTesterClass {
       originUrl,
       t: endTime
     };
-    self.delayExec.exec(() => {
-      let delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
+    this.delayExec.exec(() => {
+      const delayResult = {testRes: this.testRes, fastestIdx: this.fastestIdx};
       CallFunc(this.onRes)(delayResult);
-      self.testResult.push(delayResult);
-      window.localStorage.setItem('FASTEST_GATE', self.targetURLS[this.fastestIdx]);
-      if(self.testResult.length === self.targetURLS.length) {
+      this.emit('res', delayResult);
+      this.testResult.push(delayResult);
+      window.localStorage.setItem('FASTEST_GATE', this.targetURLS[this.fastestIdx]);
+      if(this.testResult.length === this.targetURLS.length) {
         // test finished
-        CallFunc(self.onEnd)(delayResult);
+        CallFunc(this.onEnd)(delayResult);
+        this.emit('end', delayResult);
       }
     }, 100);
   }
 }
+
+export {
+  GateResSpeedTesterClass
+};
