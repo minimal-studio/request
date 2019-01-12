@@ -1,7 +1,7 @@
 {
   "name": "uke-request",
   "version": "0.13.6",
-  "description": "通讯加密，消息压缩，RESTFul, 异步事件",
+  "description": "通讯加密，消息压缩，RESTFul",
   "scripts": {
     "publish": "npm publish ./build",
     "release": "npm version patch; npm run publish:build",
