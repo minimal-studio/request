@@ -38,8 +38,10 @@ export function searchUrlParams(searchStr) {
 }
 
 /**
- * 解析并构造 url，例如 resolveUrl('https://example.com', 'route1', 'route2') -> https://example.com/route1/route2
- *
+ * 解析并构造 url
+ * @example
+ * resolveUrl('https://example.com', 'route1', 'route2') -> https://example.com/route1/route2
+ * 
  * @export
  * @param {string} baseUrl 基准 url
  * @param {string} paths 路由们
