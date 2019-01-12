@@ -1,5 +1,7 @@
+const defaultPollData = {
+  Params: []
+};
 /**
- *
  * 轮询模块
  * 
  * @example
@@ -51,13 +53,9 @@
  * 停止轮询
  * PollingEntity.stop()
  *
- * @export
  * @class PollMethod
  */
-const defaultPollData = {
-  Params: []
-};
-export default class PollMethod {
+class PollMethod {
   constructor(pollFreq = 2, pollMethod = 'poll', defaultPollData = defaultPollData) {
     // super();
 
@@ -261,3 +259,4 @@ export default class PollMethod {
     this.isStarted = false;
   }
 }
+export default PollMethod;

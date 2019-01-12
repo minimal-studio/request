@@ -61,7 +61,7 @@ let byteStreamGenerator = function *(K) {
   }
 }
 
-export default class RC4Class {
+class RC4Class {
   constructor(key) {
     if(!key) console.error('Must pass the key to constructor');
     this.privateKey = keySetup(key);
@@ -92,3 +92,4 @@ export default class RC4Class {
     return outputText;
   }
 }
+export default RC4Class;

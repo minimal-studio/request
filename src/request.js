@@ -99,6 +99,16 @@ function _wrapDataBeforeSend(targetData) {
  *
  * @class RequestClass
  * @extends {EventEmitterClass}
+ * 
+ * @example
+ * 
+ * import { $request } from 'uke-request';
+ * 
+ * $request.get(url, {
+ *   params: {
+ *     ID: 123
+ *   }
+ * })
  */
 class RequestClass extends EventEmitterClass {
   constructor(config) {

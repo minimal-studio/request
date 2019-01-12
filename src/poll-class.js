@@ -1,10 +1,9 @@
 /**
  * 轮询包装类
  *
- * @export
  * @class PollClass
  */
-export default class PollClass {
+class PollClass {
   constructor(freq = 2, $request) {
     this.isStarted = false;
     this.pollEntity = null;
@@ -49,3 +48,4 @@ export default class PollClass {
     this.isStarted = false;
   }
 }
+export default PollClass;
