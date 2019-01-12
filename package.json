@@ -24,7 +24,7 @@
     "fs-extra": "^7.0.0",
     "jest": "^23.6.0",
     "jsdoc": "^3.5.5",
-    "minami": "^1.2.3",
+    "foodoc": "^0.0.9",
     "regenerator-runtime": "^0.12.1"
   },
   "repository": {

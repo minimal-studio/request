@@ -11,6 +11,10 @@
     "dictionaries": ["jsdoc", "closure"]
   },
   "templates": {
+    "systemName": "Uke-Request",
+    "systemSummary": "基于 fetch 封装的请求库",
+    "systemColor": "#449bea",
+    "copyright": "Uke-Request",
     "cleverLinks": false,
     "monospaceLinks": false
   },
