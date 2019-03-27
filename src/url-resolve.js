@@ -19,8 +19,15 @@ export function getUrlParams(key, href) {
   let resultObj = {};
   if(!searchs) return {};
   let params = searchs.split(/&+/);
-  params.forEach(item => {
+  let parentKey = null;
+  params.forEach((item, idx) => {
     let [key, val] = item.split('=');
+    if (val === undefined && parentKey) {
+        resultObj[parentKey] = resultObj[parentKey]+'&'+key;
+        parentKey = null;
+    	return 
+    }
+    parentKey = key;
     resultObj[key] = val;
   });
   return key ? resultObj[key] : resultObj;
