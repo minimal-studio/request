@@ -7,13 +7,12 @@ import { HasValue } from 'basic-helper';
  * 解析并获取浏览器路由的参数
  *
  * @export
- * @param {string} key 需要获取的值的 key, 例如 id=123, 此时为 id
+ * @param {string|undefined} targetKey 需要获取的值的 key, 例如 id=123, 此时为 id
  * @param {string} href 需要获取的字符串，默认为 window.location.href
  * @returns {string} 返回获取的结果
  */
-export function getUrlParams(key, href) {
-  // let searchs = 'http://localhost:3030/#/BANK'.split('?')[1];
-  let _href = href || !!window ? window.location.href : '';
+export function getUrlParams(targetKey, href) {
+  let _href = href || (window ? window.location.href : '');
   if(!_href) return;
   let searchs = _href.split('?')[1];
   let resultObj = {};
@@ -23,14 +22,14 @@ export function getUrlParams(key, href) {
   params.forEach((item, idx) => {
     let [key, val] = item.split('=');
     if (val === undefined && parentKey) {
-        resultObj[parentKey] = resultObj[parentKey]+'&'+key;
-        parentKey = null;
-    	return 
+      resultObj[parentKey] = resultObj[parentKey] + '&' + key;
+      parentKey = null;
+      return; 
     }
     parentKey = key;
     resultObj[key] = val;
   });
-  return key ? resultObj[key] : resultObj;
+  return targetKey ? resultObj[targetKey] : resultObj;
 }
 
 /**
@@ -84,7 +83,7 @@ export function decodeHashUrl(sVar, isParse = false) {
     try {
       result = JSON.parse(decryResult);
     } catch(e) {
-
+      console.log(e);
     }
   }
   return result;
@@ -107,7 +106,7 @@ export function wrapReqHashUrl({url = '', params = {}, toBase64 = true}) {
         try {
           val = JSON.stringify(val);
         } catch(e) {
-          console.log(e)
+          console.log(e);
         }
       }
       resultHash += `${param}=${toBase64 ? toBase64Str(val): val}&`;
