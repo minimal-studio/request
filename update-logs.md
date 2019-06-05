@@ -1,5 +1,13 @@
 # Update logs of Uke-request
 
+## 0.13.8
+
+- 修复 url-resolve 的问题
+
+## 0.13.6
+
+- 修复问题
+
 ## 0.13.5
 
 - 升级依赖库
