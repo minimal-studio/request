@@ -61,7 +61,7 @@
   "author": "Alex",
   "license": "MIT",
   "dependencies": {
-    "@babel/runtime": "^7.0.0",
+    "rc4-ts": "^2.0.0",
     "whatwg-fetch": "^3.0.0"
   }
 }

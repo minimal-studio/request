@@ -1,4 +1,5 @@
-import RC4 from './libs/rc4';
+import RC4 from 'rc4-ts';
+// import RC4 from './libs/rc4';
 
 /**
  * 为了实现多个接口，不同的加密 key 的方法
