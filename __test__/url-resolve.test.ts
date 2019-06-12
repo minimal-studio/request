@@ -7,6 +7,6 @@ describe('Testing url resolver', () => {
     expect(resolveUrl("http://abc.com", "path1", "path2")).toMatch('http://abc.com/path1/path2');
   });
   test('toBase64Str 123 to MTIz', () => {
-    expect(toBase64Str(123)).toMatch('MTIz');
+    expect(toBase64Str('123')).toMatch('MTIz');
   });
 });
