@@ -3,7 +3,7 @@
  * Author: Alex
  * Desc:
  * 轻松实现以下功能
- * 
+ *
  * 1. 消息体加|解密
  * 2. 消息体压|解缩
  * 3. RESTFul 数据封装
@@ -12,9 +12,11 @@
 
 import 'whatwg-fetch';
 
-import { CallFunc, IsFunc, HasValue, EventEmitterClass, IsObj } from 'basic-helper';
-import { compressFilter, decompressFilter } from './compress-helper';
-import { encryptFilter, decryptFilter } from './encrypt-helper';
+import {
+  CallFunc, IsFunc, HasValue, EventEmitterClass, IsObj
+} from 'basic-helper';
+import { compressFilter, decompressFilter } from './request-middleware/compress-helper';
+import { encryptFilter, decryptFilter } from './request-middleware/encrypt-helper';
 import { resolveUrl, wrapReqHashUrl } from './url-resolve';
 
 const canSetFields = [
@@ -23,8 +25,8 @@ const canSetFields = [
 ];
 
 const headersMapper = {
-  js: {'Content-Type': 'application/json; charset=utf-8'},
-  html: {'Content-Type': 'text/html'}
+  js: { 'Content-Type': 'application/json; charset=utf-8' },
+  html: { 'Content-Type': 'text/html' }
 };
 
 async function getCompressAndEnctyptDataAsync({
@@ -42,18 +44,25 @@ async function getCompressAndEnctyptDataAsync({
   }) : {
     data: targetData
   };
-  let runningData = Object.assign({}, originData, compressedData);
+  const runningData = Object.assign({}, originData, compressedData);
   // do encrypt filter before send, get the wrap data from outside setting.
-  let wrapedData = beforeEncryptHook(runningData);
-  let encryptDataResult = encryptFilter({
+  const wrapedData = beforeEncryptHook(runningData);
+  const encryptDataResult = encryptFilter({
     data: wrapedData,
-    wallet: wallet,
+    wallet,
   });
 
   return encryptDataResult;
 }
 
-if(process.env.NODE_ENV == 'development') {
+declare global {
+  interface Window {
+    decryptFilter: Function;
+    decompressFilter: Function;
+  }
+}
+
+if (process.env.NODE_ENV === 'development') {
   window.decryptFilter = decryptFilter;
   window.decompressFilter = decompressFilter;
 }
@@ -86,12 +95,28 @@ function _checkStatus(fetchRes) {
  * @private
  */
 function _wrapDataBeforeSend(targetData) {
-  if(!this.wrapDataBeforeSend) return targetData;
+  if (!this.wrapDataBeforeSend) return targetData;
   /**
    * [wrapDataBeforeSend 可以重写的方法，以下是默认的方式]
    */
-  if(IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
+  if (IsFunc(this.wrapDataBeforeSend)) return this.wrapDataBeforeSend(targetData);
   return targetData;
+}
+
+interface RequestConfig {
+  baseUrl: string;
+  compressLenLimit: number;
+  compress: false;
+  reconnectedCount: number;
+  reconnectTime: number;
+  connectState: string;
+  wallet: string;
+  commonHeaders: {};
+  timeout: number;
+  resMark: string;
+  errMark: string;
+  resPipeQueue: [];
+  reqPipeQueue: [];
 }
 
 /**
@@ -99,11 +124,11 @@ function _wrapDataBeforeSend(targetData) {
  *
  * @class RequestClass
  * @extends {EventEmitterClass}
- * 
+ *
  * @example
- * 
+ *
  * import { $request } from 'uke-request';
- * 
+ *
  * $request.get(url, {
  *   params: {
  *     ID: 123
@@ -111,7 +136,9 @@ function _wrapDataBeforeSend(targetData) {
  * })
  */
 class RequestClass extends EventEmitterClass {
-  constructor(config) {
+  defaultConfig: RequestConfig;
+
+  constructor(config?: RequestConfig) {
     super();
     this.defaultConfig = {
       baseUrl: '',
@@ -146,15 +173,17 @@ class RequestClass extends EventEmitterClass {
 
     this.resPipe(this._setResDataHook());
   }
+
   execPipeQueue(targetData, targetQueue) {
-    if(!targetQueue || !IsObj(targetData)) return targetData;
-    let resData = {...targetData};
+    if (!targetQueue || !IsObj(targetData)) return targetData;
+    let resData = { ...targetData };
     for (const pipeFunc of targetQueue) {
-      if(!IsFunc(pipeFunc)) continue;
+      if (!IsFunc(pipeFunc)) continue;
       resData = pipeFunc(resData);
     }
     return resData;
   }
+
   /**
    * 设置请求对象的配置
    *
@@ -163,16 +192,17 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   setConfig = (config) => {
-    if(!config) return {};
+    if (!config) return {};
     /**
      * 避免被设置其他字段
      */
-    Object.keys(config).forEach(configKey => {
-      if(canSetFields.indexOf(configKey) != -1) {
+    Object.keys(config).forEach((configKey) => {
+      if (canSetFields.indexOf(configKey) != -1) {
         this[configKey] = config[configKey];
       }
     });
   }
+
   /**
    * 用于广播 response 事件
    *
@@ -183,19 +213,23 @@ class RequestClass extends EventEmitterClass {
     // 获取完整的 res 对象
     this.emit(this.resMark, res);
   }
+
   resPipe(pipeFunc) {
     this._pipe(pipeFunc, this.resPipeQueue);
   }
+
   reqPipe(pipeFunc) {
     this._pipe(pipeFunc, this.reqPipeQueue);
   }
+
   _pipe(pipeFunc, targetQueue) {
-    if(IsFunc(pipeFunc)) {
+    if (IsFunc(pipeFunc)) {
       targetQueue.push(pipeFunc);
     } else {
       // console.warn('pipeFunc need to be a function')
     }
   }
+
   /**
    * 用于广播 error 事件
    *
@@ -206,6 +240,7 @@ class RequestClass extends EventEmitterClass {
     // 广播消息错误
     this.emit(this.errMark, res);
   }
+
   /**
    * 请求生命周期函数，在 res return 之前调用
    *
@@ -216,12 +251,13 @@ class RequestClass extends EventEmitterClass {
   _setResDataHook() {
     // 可以重写，用于做 resData 的业务处理
     // console.log('set [$request.setResDataHook = func] first');
-    if(this.setResDataHook) {
+    if (this.setResDataHook) {
       // console.warn('setResDataHook 要被废弃了，请使用新接口 resPipe()');
-      return (resData) => this.setResDataHook(resData);
+      return resData => this.setResDataHook(resData);
     }
     // return resData;
   }
+
   /**
    * 解析 url, 可以封装
    *
@@ -231,17 +267,20 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   urlFilter = (path, params) => {
-    if(/https?/.test(path) || /^(\/\/)/.test(path)) return path;
+    if (/https?/.test(path) || /^(\/\/)/.test(path)) return path;
     let url = this.baseUrl;
-    if(!url) return console.log('set $request.setConfig({baseUrl: url}) first');
+    if (!url) return console.log('set $request.setConfig({baseUrl: url}) first');
     url = resolveUrl(url, path);
-    if(params) url = wrapReqHashUrl({
-      url,
-      params,
-      toBase64: false
-    });
+    if (params) {
+      url = wrapReqHashUrl({
+        url,
+        params,
+        toBase64: false
+      });
+    }
     return url;
   }
+
   /**
    * 上传接口
    *
@@ -251,13 +290,14 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   upload = (path, data) => {
-    let _url = this.urlFilter(path);
+    const _url = this.urlFilter(path);
     return fetch(_url, {
       method: 'POST',
       body: data,
       // headers: uploadHeader,
     });
   }
+
   /**
    * 发送 POST 请求
    *
@@ -267,6 +307,7 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   post = this._reqFactory('POST');
+
   /**
    * 发送 PUT 请求
    *
@@ -276,6 +317,7 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   put = this._reqFactory('PUT');
+
   /**
    * 发送 DELETE 请求
    *
@@ -285,6 +327,7 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   del = this._reqFactory('DELETE');
+
   /**
    * 发送 PATCH 请求
    *
@@ -294,6 +337,7 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   patch = this._reqFactory('PATCH');
+
   /**
    * 发送 Get 请求
    *
@@ -306,7 +350,8 @@ class RequestClass extends EventEmitterClass {
     const isStringUrl = typeof url === 'string';
     const reqConfig = isStringUrl ? {
       method: 'GET',
-      url, ...options
+      url,
+      ...options
     } : {
       ...url,
       ...options,
@@ -315,6 +360,7 @@ class RequestClass extends EventEmitterClass {
 
     return this.request(reqConfig);
   }
+
   /**
    * 请求对象生成器
    *
@@ -327,6 +373,7 @@ class RequestClass extends EventEmitterClass {
       url, data, method
     }));
   }
+
   /**
    * 可以被重写的状态判断函数
    *
@@ -336,6 +383,7 @@ class RequestClass extends EventEmitterClass {
   checkStatus() {
     return true;
   }
+
   /**
    * 底层请求接口，GET POST DELETE PATCH 的实际接口
    *
@@ -346,20 +394,20 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   async request({
-    url, data, headers, method = 'POST', params, 
+    url, data, headers, method = 'POST', params,
     // compress = this.compress,
-    // compressLenLimit = this.compressLenLimit, 
+    // compressLenLimit = this.compressLenLimit,
     // pipeBeforeData,
     // wallet = this.wallet,
     isEncrypt,
-    returnAll = false, onError = this.onErr, 
+    returnAll = false, onError = this.onErr,
     ...other
   }) {
     const _url = this.urlFilter(url, params);
     const isGet = method === 'GET';
     isEncrypt = isEncrypt && !isGet;
     const _headers = isEncrypt ? headersMapper.html : headersMapper.js;
-    
+
     // if(!isGet) {
     //   /** 如果需要压缩 */
     //   const compressedData = await compressFilter({ data, compressLenLimit, compress });
@@ -373,32 +421,31 @@ class RequestClass extends EventEmitterClass {
     //   /** 如果需要加密 */
     //   data = wallet ? encryptFilter({ data: pipedData, wallet }) : data;
     // }
-    
+
     const body = method === 'GET' ? {} : {
       body: isEncrypt ? data : JSON.stringify(data)
     };
 
-    let fetchOptions = {
+    const fetchOptions = {
       method,
       headers: Object.assign({}, _headers, this.commonHeaders, headers),
       ...body,
       ...other
     };
 
-    let result = {};
+    const result = {};
 
     try {
-
       /** 1. 尝试发送远端请求, 并解析结果 */
-      let fetchRes = await fetch(_url, fetchOptions);
-      
-      let isJsonRes = isResJson(fetchRes);
+      const fetchRes = await fetch(_url, fetchOptions);
+
+      const isJsonRes = isResJson(fetchRes);
 
       let resData = {};
 
       try {
         resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
-      } catch(e) {
+      } catch (e) {
         onError(e);
       }
 
@@ -408,7 +455,7 @@ class RequestClass extends EventEmitterClass {
       // }
 
       /** 执行 resPipe 的时机 */
-      if(typeof resData !== 'string') resData = this.execPipeQueue({...resData}, this.resPipeQueue);
+      if (typeof resData !== 'string') resData = this.execPipeQueue({ ...resData }, this.resPipeQueue);
 
       Object.assign(result, {
         data: resData,
@@ -420,7 +467,7 @@ class RequestClass extends EventEmitterClass {
       const isPass = _checkStatus.call(this, fetchRes);
 
       /** 3. 如果不成功，则返回包装过的信息 */
-      if(!isPass) {
+      if (!isPass) {
         const checkInfo = {
           ...result,
           err: 'checkStatus false.',
@@ -430,12 +477,11 @@ class RequestClass extends EventEmitterClass {
       }
 
       this.onRes(result);
-      
-    } catch(e) {
+    } catch (e) {
       /** 如果有传入 onError，则不广播全局的 onErr 事件 */
       // IsFunc(onError) ? onError(e) : this.onErr(e);
       onError(e);
-  
+
       Object.assign(result, {
         data: null,
         err: e
@@ -444,6 +490,7 @@ class RequestClass extends EventEmitterClass {
 
     return returnAll ? result : result.data;
   }
+
   /**
    * 广播网络状态改变消息
    *
@@ -452,7 +499,7 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   changeNetworkState(state) {
-    if(state == this.connectState) return;
+    if (state == this.connectState) return;
     this.emit('CHANGE_NETWORK_STATUS', {
       state
     });
@@ -501,7 +548,7 @@ class RequestClass extends EventEmitterClass {
 
     const postResData = await this.request({
       url: url || path,
-      data: sendDataFilterResult, 
+      data: sendDataFilterResult,
       // data: sendData.data || sendData.Data,
       // pipeBeforeData: sendData,
       isEncrypt: !!wallet,
@@ -511,11 +558,11 @@ class RequestClass extends EventEmitterClass {
       headers
     });
 
-    if(HasValue(postResData)) {
-      let _dataFilterRes = decryptFilter({data: postResData, wallet});
-      let dataFilterRes = this._setResDataHook()(_dataFilterRes);
+    if (HasValue(postResData)) {
+      const _dataFilterRes = decryptFilter({ data: postResData, wallet });
+      const dataFilterRes = this._setResDataHook()(_dataFilterRes);
 
-      if(HasValue(dataFilterRes.data)) {
+      if (HasValue(dataFilterRes.data)) {
         this.changeNetworkState('ok');
         const decomResData = dataFilterRes.isCompress ? await decompressFilter(dataFilterRes.data) : dataFilterRes.data;
         dataFilterRes.data = dataFilterRes.Data = decomResData;
@@ -524,13 +571,12 @@ class RequestClass extends EventEmitterClass {
       }
 
       return dataFilterRes;
-    } else {
-      // this.reconnect('not res data.');
-
-      CallFunc(onErr)('not res data.');
-
-      return false;
     }
+    // this.reconnect('not res data.');
+
+    CallFunc(onErr)('not res data.');
+
+    return false;
   }
 }
 const $request = new RequestClass();

@@ -11,9 +11,11 @@ class PollClass {
     this.$request = $request;
     this.sendData = {};
   }
+
   onRes(res) {
 
   }
+
   /**
    * 轮询开始
    *
@@ -22,11 +24,12 @@ class PollClass {
    * @memberof PollClass
    */
   start(sendData) {
-    if(this.isStarted) return;
+    if (this.isStarted) return;
     this.isStarted = true;
     this.sendData = sendData;
     this.polling();
   }
+
   /**
    * 轮询
    *
@@ -34,11 +37,12 @@ class PollClass {
    * @memberof PollClass
    */
   async polling() {
-    if(!this.isStarted) return;
-    let res = await $request({sendData});
+    if (!this.isStarted) return;
+    const res = await $request({ sendData });
     this.onRes(res);
     setTimeout(() => this.polling.call(this), this.freq * 1000);
   }
+
   /**
    * 停止轮询
    *

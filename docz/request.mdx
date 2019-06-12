@@ -1,0 +1,57 @@
+---
+name: Request / 异步请求
+route: /Request
+---
+
+import { useState } from 'react';
+import { Playground } from 'docz'
+import { RequestClass } from '../src/request'
+
+# Request
+
+## 此页面仅供开发时使用
+
+<Playground>
+  {
+    () => {
+      const testUrl = 'http://127.0.0.1:5777';
+      const $R = new RequestClass();
+      const [requestRes, setRes] = useState(null);
+      async function getRequest() {
+        const resGet = await $R.get(testUrl + '/test');
+        const resPost = await $R.post(testUrl + '/test');
+        const resDel = await $R.del(testUrl + '/test');
+        const resPut = await $R.put(testUrl + '/test');
+        setRes({
+          resGet,
+          resPost,
+          resDel,
+          resPut,
+        })
+        console.log(resGet)
+        console.log(resPost)
+        console.log(resDel)
+        console.log(resPut)
+      }
+      if(!requestRes) getRequest();
+      return (
+        <div>
+          {
+            requestRes ? (
+              <div>
+                <p>get res: {JSON.stringify(requestRes.resGet)}</p>
+                <p>post res: {JSON.stringify(requestRes.resPost)}</p>
+                <p>delete res: {JSON.stringify(requestRes.resDel)}</p>
+                <p>put res: {JSON.stringify(requestRes.resPut)}</p>
+              </div>
+            ) : (
+              <div>
+                如果没有数据，则需要在 server-for-test 目录下启动测试服务
+              </div>
+            )
+          }
+        </div>
+      )
+    }
+  }
+</Playground>

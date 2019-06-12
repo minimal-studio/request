@@ -3,7 +3,7 @@ const defaultPollData = {
 };
 /**
  * 轮询模块
- * 
+ *
  * @example
  * const pollEntity = new PollMethod(pollFreq); [pollFreq 为轮询一次的频率，单位为秒]
  * pollEntity.onRes = pollHandle;
@@ -85,18 +85,20 @@ class PollMethod {
      */
     this.pollDataSet = {};
   }
+
   /**
    * 轮询开始
    *
    * @memberof PollMethod
    */
   start() {
-    if(!this.isStarted && this.checkConfig()) {
+    if (!this.isStarted && this.checkConfig()) {
       this.pollTime = 1;
       this.startPoll();
       this.isStarted = true;
     }
   }
+
   /**
    * 检查配置是否符合预期
    *
@@ -106,17 +108,18 @@ class PollMethod {
   checkConfig() {
     let isPass = false;
     switch (true) {
-    case !this.$request:
-      console.log('please call setReqObj($request)');
-      break;
-    case !this.pollUrl:
-      console.log('please call setPollUrl(pollUrl)');
-      break;
-    default:
-      isPass = true;
+      case !this.$request:
+        console.log('please call setReqObj($request)');
+        break;
+      case !this.pollUrl:
+        console.log('please call setPollUrl(pollUrl)');
+        break;
+      default:
+        isPass = true;
     }
     return isPass;
   }
+
   /**
    * 设置轮询用到的请求对象
    *
@@ -126,6 +129,7 @@ class PollMethod {
   setReqObj(reqObj) {
     this.$request = reqObj;
   }
+
   /**
    * 设置轮询地址
    *
@@ -135,6 +139,7 @@ class PollMethod {
   setPollUrl(url) {
     this.pollUrl = url;
   }
+
   /**
    * 设置轮询的数据配置
    *
@@ -143,9 +148,10 @@ class PollMethod {
    * @memberof PollMethod
    */
   setPollConfig(config) {
-    if (typeof config != 'object') return console.error('this interface expect parameter of Object');
+    if (typeof config !== 'object') return console.error('this interface expect parameter of Object');
     this.pollDataSet = config;
   }
+
   /**
    * 往已存在的轮询数据配置中添加数据配置
    *
@@ -155,6 +161,7 @@ class PollMethod {
   addConfig(config) {
     Object.assign(this.pollDataSet, config);
   }
+
   /**
    * 移除轮询数据配置
    *
@@ -162,9 +169,10 @@ class PollMethod {
    * @memberof PollMethod
    */
   removeConfig(key) {
-    let keyArr = Array.isArray(key) ? key : [key];
+    const keyArr = Array.isArray(key) ? key : [key];
     keyArr.forEach(item => delete this.pollDataSet[item]);
   }
+
   /**
    * 开始轮询
    *
@@ -177,6 +185,7 @@ class PollMethod {
     // }, this.pollFreq);
     this.polling();
   }
+
   /**
    * 等待上一个轮询结束后再次发起下一个轮询
    *
@@ -184,11 +193,12 @@ class PollMethod {
    * @memberof PollMethod
    */
   _loopPollWhenReqDone() {
-    if(!this.isStarted) return;
+    if (!this.isStarted) return;
     this.timer = setTimeout(() => {
       this.polling();
     }, this.pollFreq);
   }
+
   /**
    * 封装轮询请求数据
    *
@@ -196,19 +206,20 @@ class PollMethod {
    * @memberof PollMethod
    */
   _wrapPollData() {
-    let allPollConfig = [];
-    let configIdConfigMapper = {};
+    const allPollConfig = [];
+    const configIdConfigMapper = {};
     this.pollTime += 1;
-    for (var configID in this.pollDataSet) {
-      let currConfig = this.pollDataSet[configID];
-      let currData = currConfig.getData();
+    for (const configID in this.pollDataSet) {
+      const currConfig = this.pollDataSet[configID];
+      const currData = currConfig.getData();
       if (!!currData && (this.pollTime == 0 || this.pollTime % currConfig.freq == 0)) {
         allPollConfig.push(currData);
-        configIdConfigMapper[currConfig.api] = Object.assign({}, currConfig, {id: configID});
+        configIdConfigMapper[currConfig.api] = Object.assign({}, currConfig, { id: configID });
       }
     }
-    return {allPollConfig, configIdConfigMapper};
+    return { allPollConfig, configIdConfigMapper };
   }
+
   /**
    * 轮询中的接口
    *
@@ -222,23 +233,25 @@ class PollMethod {
       }
     };
   }
+
   async sendData(_pollData) {
     return await this.$request.send({
       sendData: _pollData, url: this.pollUrl
     });
   }
+
   async polling() {
     const pollDataParams = this._wrapPollData(); // 获取轮询的参数
     const { allPollConfig, configIdConfigMapper } = pollDataParams;
     if (allPollConfig.length == 0) return; // 如果没有参数, 就不发起请求轮询
-    let _pollData = Object.assign({}, this.pollData, this.wrapData(allPollConfig));
+    const _pollData = Object.assign({}, this.pollData, this.wrapData(allPollConfig));
 
     const sendResData = await this.sendData(_pollData);
 
-    let data = sendResData.data;
-    for (var dataKey in data) {
-      let configMapped = configIdConfigMapper[dataKey];
-      if(configMapped && configMapped.callback && typeof configMapped.callback == 'function') {
+    const { data } = sendResData;
+    for (const dataKey in data) {
+      const configMapped = configIdConfigMapper[dataKey];
+      if (configMapped && configMapped.callback && typeof configMapped.callback === 'function') {
         configMapped.callback({
           resData: data[dataKey],
           api: dataKey,
@@ -249,6 +262,7 @@ class PollMethod {
     }
     this._loopPollWhenReqDone();
   }
+
   /**
    * 停止轮询
    *

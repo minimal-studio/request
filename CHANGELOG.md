@@ -1,5 +1,47 @@
 # Update logs of Uke-request
 
+## 1.0.0
+
+### 新功能
+
+- 全面支持 typescript
+
+### Break change
+
+- 不再默认导出 `request` 和 `url-resolve` 以外的 API，需要通过指定路径引用
+- request 函数不再与通讯加密和消息解压缩绑定，通过另外的 API 实现
+
+### 重新设计的 API
+
+- request，重新设计，兼容旧版的 RESTFul 模式，可使用中间件机制处理数据。
+
+```js
+import { RequestClass } from 'uke-request';
+// 使用内置的通讯加密中间件
+import { RequestClass } from 'uke-request/';
+
+const $R = new RequestClass();
+
+/** 中间件 */
+$R.use((data) => {
+  return data;
+});
+
+$R.get();
+$R.post();
+$R.del();
+$R.put();
+$R.patch();
+
+$R.request();
+```
+
+### 重命名
+
+- wrapReqHashUrl -> urlParamsToQuery
+
+-------------
+
 ## 0.13.8
 
 - 修复 url-resolve 的问题
@@ -31,6 +73,8 @@
 ## 0.13.0
 
 - 新增 resPipe API，用于过滤响应
+
+-------------
 
 ## 0.12.15
 
@@ -73,12 +117,18 @@ $GH.EventEmitter.subscribe('CHANGE_NETWORK_STATUS', func) // 修改为
 $request.on('CHANGE_NETWORK_STATUS', func)
 ```
 
+-------------
+
 ## 0.11.0
 
 - 优化底层 API，支持 RESTFul 调用
 - api setRequestConfig 更名为 setConfig
 - baseUrl 取代 reqUrl
 - 新增 post put del 等 RESTFul API
+
+-------------
+
+> 旧版本 orion-request
 
 ## 2.1.9
 

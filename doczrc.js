@@ -10,6 +10,7 @@ export default {
   wrapper: 'docz/wrapper',
   codeSandbox: false,
   hashRouter: true,
+  typescript: true,
   files: '**/*.mdx',
   htmlContext: {
     head: {
@@ -20,9 +21,10 @@ export default {
       }],
     },
   },
-  themeConfig: themeConfig,
+  themeConfig,
   menu: [
     'Getting Started / 开始',
+    'Request / 异步请求',
     'URL Resolver / URL解析器',
   ],
   // modifyBundlerConfig: (config) => {
