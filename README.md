@@ -1,9 +1,9 @@
 # Uke Request
 
+基于 fetch api 的异步请求封装库, 基于异步事件监听机制、中间件机制。
+
 [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request)
 [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request)
-
-基于 window.fetch 的拓展封装库, 基于异步事件监听机制
 
 - [在线文档](https://request.ukelli.com/)
 
