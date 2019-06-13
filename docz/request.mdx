@@ -4,12 +4,16 @@ route: /Request
 ---
 
 import { useState } from 'react';
-import { Playground } from 'docz'
+import { Playground, Props } from 'docz'
 import { RequestClass } from '../src/request'
+import { compress, decompress } from '../src/request-middleware/compress-helper'
+import { encrypt, decrypt } from '../src/request-middleware/encrypt-helper'
 
 # Request
 
-## 此页面仅供开发时使用
+> 此页面仅供开发时使用
+
+## 通用
 
 <Playground>
   {
@@ -17,6 +21,13 @@ import { RequestClass } from '../src/request'
       const testUrl = 'http://127.0.0.1:5777';
       const $R = new RequestClass();
       const [requestRes, setRes] = useState(null);
+      const before = (reqData) => {
+        return reqData;
+      }
+      const after = (resData) => {
+        return resData;
+      }
+      $R.use([before, after])
       async function getRequest() {
         const resGet = await $R.get(testUrl + '/test');
         const resPost = await $R.post(testUrl + '/test');
@@ -28,22 +39,115 @@ import { RequestClass } from '../src/request'
           resDel,
           resPut,
         })
-        console.log(resGet)
-        console.log(resPost)
-        console.log(resDel)
-        console.log(resPut)
       }
       if(!requestRes) getRequest();
       return (
         <div>
           {
             requestRes ? (
+              <code>
+                <pre>get res: {JSON.stringify(requestRes.resGet)}</pre>
+                <pre>post res: {JSON.stringify(requestRes.resPost)}</pre>
+                <pre>delete res: {JSON.stringify(requestRes.resDel)}</pre>
+                <pre>put res: {JSON.stringify(requestRes.resPut)}</pre>
+              </code>
+            ) : (
               <div>
-                <p>get res: {JSON.stringify(requestRes.resGet)}</p>
-                <p>post res: {JSON.stringify(requestRes.resPost)}</p>
-                <p>delete res: {JSON.stringify(requestRes.resDel)}</p>
-                <p>put res: {JSON.stringify(requestRes.resPut)}</p>
+                如果没有数据，则需要在 server-for-test 目录下启动测试服务
               </div>
+            )
+          }
+        </div>
+      )
+    }
+  }
+</Playground>
+
+## 消息加密
+
+> 打开控制台查看输入输出
+
+<Playground>
+  {
+    () => {
+      const testUrl = 'http://127.0.0.1:5777';
+      const $R = new RequestClass();
+      const [requestRes, setRes] = useState(null);
+      /** 使用加密解密中间件 */
+      $R.use([encrypt('123'), decrypt('123')])
+      async function getRequest() {
+        const resPost = await $R.post(testUrl + '/encrypt', {
+          ID: 123
+        });
+        setRes({
+          resPost,
+        })
+      }
+      if(!requestRes) getRequest();
+      return (
+        <div>
+          {
+            requestRes ? (
+              <code>
+                <pre>post res: {JSON.stringify(requestRes.resPost)}</pre>
+              </code>
+            ) : (
+              <div>
+                如果没有数据，则需要在 server-for-test 目录下启动测试服务
+              </div>
+            )
+          }
+        </div>
+      )
+    }
+  }
+</Playground>
+
+## 消息压缩
+
+> 打开控制台查看输入输出
+
+<Playground>
+  {
+    () => {
+      const testUrl = 'http://127.0.0.1:5777';
+      const $R = new RequestClass();
+      const [requestRes, setRes] = useState(null);
+      function dataWrapper(data) {
+        return data
+      }
+      function dataWrapperBeforeDecompress(data) {
+        console.log(data)
+        return {
+          data
+        }
+      }
+      function dataWrapperAfterDecompress(data) {
+        return {
+          data
+        }
+      }
+      /** 使用加密解密中间件 */
+      $R.use([compress(1024, dataWrapper), decompress(
+        dataWrapperBeforeDecompress,
+        dataWrapperAfterDecompress
+      )])
+      async function getRequest() {
+        const resPost = await $R.post(testUrl + '/compress', {
+          ID: 123
+        });
+        setRes({
+          resPost,
+        })
+      }
+      if(!requestRes) getRequest();
+      return (
+        <div>
+          {
+            requestRes ? (
+              <code>
+                <pre>post res: {JSON.stringify(requestRes.resPost)}</pre>
+              </code>
             ) : (
               <div>
                 如果没有数据，则需要在 server-for-test 目录下启动测试服务
