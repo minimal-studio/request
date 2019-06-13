@@ -2,14 +2,24 @@
 
 ## 1.0.0
 
+更注重基本的通讯功能，其他功能通过中间件形式嵌入。
+
 ### 新功能
 
 - 全面支持 typescript
 
 ### Break change
 
-- 不再默认导出 `request` 和 `url-resolve` 以外的 API，需要通过指定路径引用
-- request 函数不再与通讯加密和消息解压缩绑定，通过另外的 API 实现
+> RequestClass
+
+- `RequestClass` 不再与通讯加密和消息解压缩绑定，通过另外的 API 实现
+- `RequestClass.setResDataHook` 已废弃，该用 `request.use`
+- 清理 `RequestClass` 的配置，不再提供 `reconnect` 机制
+- `RequestClass.request` 参数调整 `returnAll -> returnRaw`
+
+> 项目目录调整
+
+- 不再默认导出除了 `request` 和 `url-resolve` 之外的 API，需要通过指定路径引用
 
 ### 重新设计的 API
 
@@ -23,9 +33,14 @@ import { RequestClass } from 'uke-request/';
 const $R = new RequestClass();
 
 /** 中间件 */
-$R.use((data) => {
+const beforeReq = (data) => {
   return data;
-});
+};
+const afterRes = (data) => {
+  return data;
+};
+/** use 参数 [beforeFn, afterFn] */
+$R.use([beforeReq, afterRes]);
 
 $R.get();
 $R.post();

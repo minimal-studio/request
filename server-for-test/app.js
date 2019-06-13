@@ -2,7 +2,7 @@ const express = require('express');
 const compression = require('compression');
 const helmet = require('helmet');
 const cors = require('cors');
-const path = require('path');
+const bodyParser = require('body-parser')
 
 const app = express();
 
@@ -37,6 +37,16 @@ app.put('/test', (req, res) => {
     method: 'put',
     data: {},
   });
+});
+
+app.post('/encrypt', bodyParser.text({ type: 'text/html' }), (req, res) => {
+  res.send(req.body);
+});
+
+app.post('/compress', bodyParser.json(), (req, res) => {
+  console.log(req.body);
+  // res.json(req.body);
+  res.json({});
 });
 
 // 最后处理所有错误
