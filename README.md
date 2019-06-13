@@ -1,65 +1,48 @@
 # Uke Request
 
-基于 fetch api 的异步请求封装库, 基于异步事件监听机制、中间件机制。
+基于 fetch API 的进一步封装, 提供订阅发布与中间件机制。
 
 [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request)
 [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request)
 
-- [在线文档](https://request.ukelli.com/)
+- [帮助文档](https://request.ukelli.com/)
 
-## 提供的能力
+## Basic Usage
 
-- 消息压缩
-- 消息加密
-- 域名测速器
-- 浏览器域名的解析器，hash base64 转码解码
-- 简易轮询机制
-- [引用方式](./docs/import-desc.md)
+> Support RESTFul
 
-## 请求处理流程
-
-Uke request 对于请求发起的内部运作流程，以及 data 过滤器的生命周期说明
+以下事例以 `$R` 指定 `RequestClass` 的实例
 
 ```js
-// 此顶层调用会执行以下过滤器和钩子函数，最终得到 res
-const res = await $request.get(params);
-```
+import { RequestClass } from 'uke-request/request';
 
-1. 发起顶层调用 get, [ post del put post patch send 同理 ]
-2. 统一通过 $request.request 处理
-3. 通过一些处理请求的生命周期 parseRes 函数
-    1. 通过 resPipe 注册的链式过滤返回数据
-        - 通过 $request.resPipe((resData) => { resData.customer = {}; return resData }) 注册，有先后顺序
-    2. checkStatus 自定义检查 status 状态方式
-        - if false, 触发 onErr
-4. end 请求结束，返回 res
-
-Send 通讯加密和压缩计算
-
-1. TODO
-
-## 使用
-
-### 使用方式
-
-RESTFul
-
-```js
-import { RequestClass } from 'uke-request';
-let $R = new RequestClass();
+const $R = new RequestClass();
 
 // 可以为每一个请求对象设置配置
 $R.setConfig({
-  baseUrl: 'https://example.com', // 默认的地址，
-  timeout: 10 * 1000,
-  compressLenLimit: 2048, // 消息体压缩长度
-  reconnectTime: 30, // 重连次数
-  wallet: '123', // 密钥
+  baseUrl: 'https://example.com', // 默认的请求地址
   commonHeaders: {} // 所有的请求 headers
 });
 
+const getRes = await $R.get('/path');
+const postRes = await $R.post('/path', {
+  ID: '123'
+});
+const putRes = await $R.put('/path', {
+  ID: '123'
+});
+const delRes = await $R.del('/path', {
+  ID: '123'
+});
+```
+
+## Adavance Usage
+
+### 把 params 转换成 query url
+
+```js
 // get, 使用 params 自动转换成对应的 url
-let res = await $R.get('/item-list', options);
+// 最终请求： ${baseUrl}/item-list?id=123&other=123
 let res = await $R.get({
   url: '/item-list',
   headers: {},
@@ -70,80 +53,200 @@ let res = await $R.get({
   isBase64: false // 用于加密 params 的值
 });
 
-// params 会作为 url 的 query 形式解析
-const options = {
-  params: {
-    ID: '123'
-  },
-  onError: () => {} // 每一个消息都可以做独立的错误处理，如果有此参数，则不会触发 $R.on('onErr') 的订阅事件
-}
-
 // 统一的检查 res status 的状态，如果 return false，则触发 onErr
 $R.checkStatus = (originRes) => {
   return true;
 }
+```
 
-// post, 此方法只返回 res.data, 如果想要详情，可以订阅事件 onRes, 获取更多细节
-let postRes = await $R.post('/item-list', data, options);
-let patchRes = await $R.patch('/item-list', data, options);
-let delRes = await $R.del('/item-list', data, options);
-let putRes = await $R.put('/item-list', data, options);
+### 事件订阅
 
-// 通过 pipe 注册过滤器
-$R.resPipe((data) => {
-  data.test = true;
-  return data;
-});
+$R 提供两种订阅事件 `onRes` `onErr`, 并且会响应每个请求都
 
-// 最后会以 host/item-list?ID=123 形式发送请求
-
-// 订阅 res 详细相应
+```js
+// 每当有 res 的时候执行
 $R.on('onRes', (resDetail) => {
   resDetail = {
     data: {},
     originRes: {},
     originReq: {},
+    err: null
   }
 });
 
-// 统一的 err 详细相应
+// 每当发生错误时执行
 $R.on('onErr', (resDetail) => {
   resDetail = {
     data: {},
     originRes: {},
     originReq: {},
+    err: errMsg
   }
 });
 ```
 
-request 函数
+### 错误触发 & 错误处理
+
+$R 将根据 checkStatus 返回值判断是否进入错误处理流程, 错误处理流程有两种方式
+
+1. 订阅 `$R.on('onErr', function errHandle() {})`
+2. 为每一个请求订阅的错误回调 `$R.get({ url: '', onError: function errHandle() {} })`
+
+注意: __如果传入了 onError 回调，则不执行通过 $R.on('onErr') 订阅的回调__
+
+```ts
+// override checkStatus
+$R.checkStatus = (fetchRes: Response): boolean => false
+
+// 如果传入了 onError 回调，则不执行通过 $R.on('onErr') 订阅的回调
+$R.get({
+  url: '/get-stuff',
+  onError: (data) => {
+    console.log(data)
+  }
+})
+
+$R.on('onErr', function errHandle(data) {
+  console.log(data)
+})
+```
+
+### 中间件
+
+中间件处理有两个触发时机, 一旦注册，则每次请求都会触发，__并且原来用于提交的 data 将会被中间件返回的值替换__。
+
+1. 请求前 before req
+2. 响应后 after res
 
 ```js
-// 其他方式, options 同 fetch api，sendData 如果是 js，将自动做 header 对应的转换
+const before = (reqData) => {
+  return reqData;
+}
+const after = (resData) => {
+  return resData;
+}
+$R.use([before, after])
+
+let postRes = await $R.post('/item-list', data, options);
+```
+
+### 内置中间件
+
+通讯加密
+
+```js
+import { encrypt, decrypt } from 'uke-request/request-middleware/encrypt-helper';
+
+const encryptKey = '123';
+
+$R.use([encrypt(encryptKey), decrypt(encryptKey)]);
+
+// $R 会将 {ID: '321'} 以 '123' 为加密 key 进行 rc4 加密并发送到服务器
+// 收到响应后以同样方式解密，如果服务端返回的数据也时同样方式加密的话
+const resPost = await $R.post(testUrl + '/encrypt', {
+  ID: '321'
+});
+```
+
+## `$R` API
+
+```ts
+interface RequestParams {
+  url: string;
+  method?: RequestMethod;
+  sendType?: RequestSendTypes;
+  data: {};
+  headers?: {};
+  params?: ParamEntity;
+  returnRaw?: boolean;
+  onError?: Function;
+}
+interface RequestConfig {
+  baseUrl: string;
+  commonHeaders: {};
+  timeout: number;
+  resMark: string;
+  errMark: string;
+}
+interface MiddlewareOptions {
+  after?: Function | Function[];
+  before?: Function | Function[];
+}
+
+// 底层 request API
+$R.request(params: RequestParams)
+
+// 设置 $R 配置
+$R.setConfig(config: RequestConfig)
+
+// 使用中间件
+$R.use(options: MiddlewareOptions | Function[])
+
+// 同 $R.use([before])
+$R.useBefore(Function | Function[])
+
+// 同 $R.use([null, after])
+$R.useAfter(Function | Function[])
+
+// url 包装
+$R.urlFilter(path: string, params?: ParamEntity)
+
+// 上传
+$R.upload(path: string, data: RequestInit["body"])
+```
+
+`$R.request` 为通用底层接口，其他的 `$R.get` `$R.post` `$R.del` `$R.put` `$R.patch` 均为该接口的上层应用封装。
+
+```js
+// 其他方式, options 同 fetch API，sendData 如果是 js，将自动做 header 对应的转换
 let res = await $R.request({
   url, data, headers, method = 'POST',
-  isEncrypt = false,
-  resolveRes = true,
-  returnAll = false, // 是否返回完整的 res 状态 return returnAll ? res : res.data
+  returnRaw = false, // 是否返回完整的 res 状态 return returnAll ? res : res.data
   ...other
 });
 ```
 
-消息体加密和消息压缩功能，请使用 $R.send
+## url resolve
+
+`uke-request` 提供，用于解析前端的 `url` 的 `API`
 
 ```js
-let sendConfig = {
-  sendData: {
-    data: {}
-    other: {}
+import {
+  toBase64Str, fromBase64Str,
+  getUrlParams, searchUrlParams, urlParamsToQuery, openWindowUseHashUrl,
+  resolveUrl, decodeHashUrl
+} from 'uke-request/url-resolve';
+```
+
+### urlParamsToQuery
+
+```js
+const urlParamsConfig = {
+  url: 'https://ss.com',
+  params: {
+    id: '1',
+    req: {
+      sessID: 123,
+      username: 'alex',
+    }
   },
-  path: 'test',
-  onErr: () => {},
-  wallet: 'hahaha'
+  toBase64: false // 如果为 true，则将值进行 base64 转换
 }
 
-// 加密了 sendConfig.sendData 中的数据, 增加破解协议的成本
-let res = await $R.send(sendConfig);
+urlParamsToQuery(urlParamsConfig); // 输出 'https://ss.com?id=1&req={sessID:123,username=alex}'
+```
+
+### getUrlParams
+
+```js
+// 若此时的 url 为 'https://ss.com?id=1&req={sessID:123,username=alex}'
+const res = getUrlParams(id); // res = 1
+```
+
+### resolveUrl
+
+```js
+resolveUrl('https://a.com', 'path1', 'path2'); // 输出 'https://a.com/path1/path2'
 ```
 
 - [其他模块说明](./docs/other-desc.md)
