@@ -4,7 +4,9 @@ import RC4 from 'rc4-ts';
 /**
  * 为了实现多个接口，不同的加密 key 的方法
  */
-let rc4EntityMapper = {};
+const rc4EntityMapper: {
+  [key: string]: RC4;
+} = {};
 
 /**
  * 获取 RC4 存储对象
@@ -13,10 +15,11 @@ let rc4EntityMapper = {};
  * @param {string} encryptKey
  * @returns {RC4Entity}
  */
-function getRc4Entity(encryptKey) {
+function getRc4Entity(encryptKey: string) {
   let resultObj = rc4EntityMapper[encryptKey];
-  if(!resultObj) {
-    resultObj = rc4EntityMapper[encryptKey] = new RC4(encryptKey);
+  if (!resultObj) {
+    resultObj = new RC4(encryptKey);
+    rc4EntityMapper[encryptKey] = resultObj;
   }
   return resultObj;
 }
@@ -28,9 +31,9 @@ function getRc4Entity(encryptKey) {
  * @param {array} keyArr
  * @returns {string}
  */
-function restoreKey(keyArr) {
+function restoreKey(keyArr: []) {
   let result = '';
-  if(Array.isArray(keyArr)) {
+  if (Array.isArray(keyArr)) {
     for (let i = 0; i < keyArr.length; i++) {
       result += (String.fromCharCode(keyArr[i] - i));
     }
@@ -38,58 +41,99 @@ function restoreKey(keyArr) {
   return result;
 }
 
-let encryKeyStore = {};
+const encryKeyStore: {
+  [key: string]: string;
+} = {};
 
 /**
  * 密钥过滤器
  *
  * @private
- * @param {array} wallet 密钥
+ * @param {array} key 密钥
  * @returns {string}
  */
-function walletFilter(wallet) {
-  if(!encryKeyStore[wallet]) encryKeyStore[wallet] = Array.isArray(wallet) ? restoreKey(wallet) : wallet;
-  return encryKeyStore[wallet];
+function keyFilter(key: string) {
+  if (!encryKeyStore[key]) {
+    encryKeyStore[key] = Array.isArray(key) ? restoreKey(key) : key;
+  }
+  return encryKeyStore[key];
+}
+
+interface EncryptOptions {
+  data: {};
+  /** 加密 key */
+  key: string;
 }
 
 /**
  * 加密过滤器
- * 
+ *
  * @public
- * @param  {string} wallet 加密的key的代码，wallet
+ * @param  {EncryptOptions} options
  * @return {string} 加密后的字符串
  */
-export function encryptFilter({data, callback, wallet}) {
-  let encryptKey = walletFilter(wallet);
-  let resultData = data;
+export function encryptFilter(options: EncryptOptions) {
+  const { data, key } = options;
+  const encryptKey = keyFilter(key);
+  let encryptRes;
 
-  if(encryptKey) {
-    let dataStr = JSON.stringify(data);
-    let currRc4Entity = getRc4Entity(encryptKey);
-    resultData = currRc4Entity.encrypt(btoa(unescape(encodeURIComponent(dataStr))));
+  if (encryptKey) {
+    const dataStr = JSON.stringify(data);
+    const currRc4Entity = getRc4Entity(encryptKey);
+    encryptRes = currRc4Entity.encrypt(btoa(unescape(encodeURIComponent(dataStr))));
   }
-  return resultData;
+  return encryptRes || data;
+}
+
+interface DecryptOptions {
+  data: string;
+  /** 加密 key */
+  key: string;
 }
 
 /**
  * 解密函数
  *
  * @export
- * @param {object} options {data, wallet} 
+ * @param {DecryptOptions} options
  * @returns {data}
  */
-export function decryptFilter({data, wallet}) {
-  let encryptKey = walletFilter(wallet);
+export function decryptFilter(options: DecryptOptions) {
+  const { data, key } = options;
+  const encryptKey = keyFilter(key);
   let _data = data;
 
   if (encryptKey) {
-    let currRc4Entity = getRc4Entity(encryptKey);
-    let decryptData = currRc4Entity.decrypt(_data);
+    const currRc4Entity = getRc4Entity(encryptKey);
+    const decryptData = currRc4Entity.decrypt(_data) || '';
     try {
-      let decodeRes = decodeURIComponent(escape(atob(decryptData)));
-      _data = JSON.parse(decodeRes);
-    } catch (e) {}
+      const decodeRes = decodeURIComponent(escape(atob(decryptData)));
+      _data = decodeRes;
+      try {
+        _data = JSON.parse(decodeRes);
+      } catch (e) {
+        console.log(e);
+      }
+    } catch (e) {
+      console.log(e);
+    }
   }
   // let result = (typeof _data === 'string' ? JSON.parse(_data) : _data) || {};
   return _data;
+}
+
+export function encrypt(key: string) {
+  return (data: {}) => {
+    const res = encryptFilter({ data, key });
+    // console.log('encrypt', res);
+    return res;
+  };
+}
+
+export function decrypt(key: string) {
+  return (data: string) => {
+    const res = decryptFilter({ data, key });
+    // console.log('decrypt', res);
+    return res;
+  };
 }

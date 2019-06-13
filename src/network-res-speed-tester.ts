@@ -92,7 +92,7 @@ class GateResSpeedTesterClass extends EventEmitterClass {
    * @memberof GateResSpeedTesterClass
    */
   test = () => {
-    if (!this.checkConfig()) return;
+    if (!this.checkConfig()) return this;
     this.resetParams();
     this.testResult = [];
 

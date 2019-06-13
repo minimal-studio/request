@@ -22,19 +22,15 @@ import {
 
 export interface RequestConfig {
   baseUrl: string;
-  compressLenLimit: number;
-  compress: false;
-  reconnectedCount: number;
-  reconnectTime: number;
-  connectState: string;
-  wallet: string;
   commonHeaders: {};
   timeout: number;
   resMark: string;
   errMark: string;
-  resPipeQueue: [];
-  reqPipeQueue: [];
-  middleWares: Function[];
+}
+
+export interface MiddlewareOptions {
+  after?: Function | Function[];
+  before?: Function | Function[];
 }
 
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
@@ -51,14 +47,9 @@ export interface RequestParams {
   onError?: Function;
 }
 
-export interface FetchOptions extends RequestInit {
+// export interface FetchOptions extends RequestInit {
 
-}
-
-const canSetFields = [
-  'compressLenLimit', 'baseUrl', 'timeout', 'compress',
-  'reconnectTime', 'wallet', 'commonHeaders'
-];
+// }
 
 const headersMapper = {
   json: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -73,15 +64,11 @@ function isResJson(res: Response) {
   return /json/.test(getContentType(res));
 }
 
-/**
- * 私有的检查状态函数
- *
- * @param {object} fetchRes
- * @returns {boolean}
- * @private
- */
-function _checkStatus(fetchRes) {
-  return this.checkStatus(fetchRes);
+// class EventEmitterClassMore<T> extends EventEmitterClass {
+//   this: T
+// }
+function arrayFilter(arg: any) {
+  return Array.isArray(arg) ? arg : [arg];
 }
 
 /**
@@ -98,73 +85,100 @@ function _checkStatus(fetchRes) {
  *     ID: 123
  *   }
  * })
+ *
  */
 class RequestClass extends EventEmitterClass {
-  commonHeaders: {};
+  config: RequestConfig;
 
-  baseUrl: string;
+  afterResMiddlewares: Function[] = [];
+
+  beforeReqMiddlewares: Function[] = [];
+
+  middleWares: Function[];
 
   constructor(config?: RequestConfig) {
     super();
     const defaultConfig: RequestConfig = {
       baseUrl: '',
-      compressLenLimit: 2048,
-      compress: false,
-      reconnectedCount: 0, // 记录连接状态
-      reconnectTime: 30, // 重连次数, 默认重连五次, 五次都失败将调用
-      connectState: 'ok',
-      wallet: '',
       commonHeaders: {},
       timeout: 10 * 1000,
       resMark: 'onRes',
       errMark: 'onErr',
-      resPipeQueue: [],
-      reqPipeQueue: [],
-      middleWares: []
     };
 
-    this.reqStructure = {
-      route: '/',
-      data: {},
-      isCompress: false
-    };
-
-    Object.assign(this, defaultConfig, this.setConfig(config));
-
-    this.resPipe(this._setResDataHook());
+    this.config = Object.assign({}, defaultConfig, this.setConfig(config));
   }
 
-  use(middleWare: Function) {
-
+  resPipe(pipeFunc?: Function) {
+    console.log('resPipe will be deprecated, call "request.use({ after: fn })"');
+    this.use([null, pipeFunc]);
   }
 
-  execPipeQueue(targetData, targetQueue) {
-    if (!targetQueue || !IsObj(targetData)) return targetData;
-    let resData = { ...targetData };
-    for (const pipeFunc of targetQueue) {
-      if (!IsFunc(pipeFunc)) continue;
-      resData = pipeFunc(resData);
+  reqPipe(pipeFunc: Function) {
+    console.log('reqPipe will be deprecated, call "request.use({ before: fn })"');
+    this.use([pipeFunc]);
+  }
+
+  /**
+   * 在发请求前执行的 middleware
+   */
+  useBefore = (fn: Function | Function[]) => {
+    this.use({
+      before: fn
+    });
+  }
+
+  /**
+   * 在发请求前执行的 middleware
+   */
+  useAfter = (fn: Function | Function[]) => {
+    this.use({
+      after: fn
+    });
+  }
+
+  /**
+   * 使用中间件
+   *
+   * @param {MiddlewareOptions | Function[]} options 如果为数组，则第一个为 before, 第二个为 after
+   *
+   * @memberof RequestClass
+   */
+  use = (options: MiddlewareOptions | Function[]) => {
+    let before;
+    let after;
+    if (Array.isArray(options)) {
+      before = options[0];
+      after = options[1];
+    } else {
+      before = options.before;
+      after = options.after;
     }
-    return resData;
+    if (before) this.beforeReqMiddlewares.push(...arrayFilter(before));
+    if (after) this.afterResMiddlewares.push(...arrayFilter(after));
+  }
+
+  execMiddlewares = (targetData: {}, targetMiddlewares: Function[]) => {
+    if (!targetMiddlewares) return targetData;
+    let nextData = IsObj(targetData) ? Object.assign({}, targetData) : targetData;
+    targetMiddlewares.forEach((middleware) => {
+      if (IsFunc(middleware)) {
+        nextData = middleware(nextData);
+      }
+    });
+    return nextData;
   }
 
   /**
    * 设置请求对象的配置
    *
-   * @param {object} config {'compressLenLimit', 'baseUrl', 'timeout', 'reconnectTime', 'wallet', 'commonHeaders'}
+   * @param {RequestConfig} config RequestEntity 的配置
    * @returns {void}
    * @memberof RequestClass
    */
-  setConfig = (config) => {
-    if (!config) return {};
-    /**
-     * 避免被设置其他字段
-     */
-    Object.keys(config).forEach((configKey) => {
-      if (canSetFields.indexOf(configKey) != -1) {
-        this[configKey] = config[configKey];
-      }
-    });
+  setConfig = (config: RequestConfig) => {
+    if (!config) return;
+    Object.assign(this.config, config);
   }
 
   /**
@@ -173,25 +187,9 @@ class RequestClass extends EventEmitterClass {
    * @param {object} res request 返回的 res 对象
    * @memberof RequestClass
    */
-  onRes = (res) => {
+  onRes = (res: any) => {
     // 获取完整的 res 对象
-    this.emit(this.resMark, res);
-  }
-
-  resPipe(pipeFunc) {
-    this._pipe(pipeFunc, this.resPipeQueue);
-  }
-
-  reqPipe(pipeFunc) {
-    this._pipe(pipeFunc, this.reqPipeQueue);
-  }
-
-  _pipe(pipeFunc, targetQueue) {
-    if (IsFunc(pipeFunc)) {
-      targetQueue.push(pipeFunc);
-    } else {
-      // console.warn('pipeFunc need to be a function')
-    }
+    this.emit(this.config.resMark, res);
   }
 
   /**
@@ -200,27 +198,18 @@ class RequestClass extends EventEmitterClass {
    * @param {object} res request 返回的 res 对象
    * @memberof RequestClass
    */
-  onErr = (res) => {
+  onErr = (res: any) => {
     // 广播消息错误
-    this.emit(this.errMark, res);
+    this.emit(this.config.errMark, res);
   }
 
   /**
-   * 请求生命周期函数，在 res return 之前调用
+   * 可以被重写的状态判断函数
    *
-   * @param {object} resData
-   * @returns 外部调用，改变内部数据
+   * @returns {boolean}
    * @memberof RequestClass
    */
-  _setResDataHook() {
-    // 可以重写，用于做 resData 的业务处理
-    // console.log('set [$request.setResDataHook = func] first');
-    if (this.setResDataHook) {
-      // console.warn('setResDataHook 要被废弃了，请使用新接口 resPipe()');
-      return resData => this.setResDataHook(resData);
-    }
-    // return resData;
-  }
+  checkStatus = () => true
 
   /**
    * 解析 url, 可以封装
@@ -232,7 +221,7 @@ class RequestClass extends EventEmitterClass {
    */
   urlFilter = (path: string, params?: ParamEntity) => {
     if (/https?/.test(path) || /^(\/\/)/.test(path)) return path;
-    let url = this.baseUrl;
+    let url = this.config.baseUrl;
     if (!url) {
       console.log('set $request.setConfig({baseUrl: url}) first');
       return '';
@@ -313,15 +302,12 @@ class RequestClass extends EventEmitterClass {
    * @returns  {promise}
    * @memberof RequestClass
    */
-  async get(url: string | {}, options: RequestParams) {
+  async get(url: string | {}, options?: RequestParams) {
     const isStringUrl = typeof url === 'string';
     const reqConfig = Object.assign({}, {
       method: 'GET',
-      url,
       ...options
-    }, isStringUrl ? {
-      url
-    } : url);
+    }, isStringUrl ? { url } : url);
 
     return this.request(reqConfig);
   }
@@ -334,18 +320,22 @@ class RequestClass extends EventEmitterClass {
    * @memberof RequestClass
    */
   _reqFactory(method: RequestMethod) {
-    return (url: string, data: {} | string, options = {}) => this.request(Object.assign(options, {
+    return (
+      url: string, data: object | string, options = {}
+    ) => this.request(Object.assign(options, {
       url, data, method
     }));
   }
 
   /**
-   * 可以被重写的状态判断函数
-   *
-   * @returns {boolean}
-   * @memberof RequestClass
+   * 在请求前 use middleware
    */
-  checkStatus = () => true
+  dataFormatFilter = (data: {}) => {
+    const _data = this.execMiddlewares(data, this.beforeReqMiddlewares);
+    const sendJSON = IsObj(_data);
+    const nextData = sendJSON ? _data : JSON.stringify(_data);
+    return nextData;
+  }
 
   /**
    * 底层请求接口，GET POST DELETE PATCH 的实际接口
@@ -355,35 +345,40 @@ class RequestClass extends EventEmitterClass {
    */
   async request(requestParams: RequestParams) {
     const {
-      url, data, headers, method = 'POST', params,
-      sendType = 'json',
-      returnRaw = false, onError = this.onErr,
+      url, params, data,
+      headers, method = 'POST',
+      // sendType = 'json',
+      returnRaw = false,
+      onError = this.onErr,
       ...other
     } = requestParams;
-    const _url = this.urlFilter(url, params);
+    const fetchInput = this.urlFilter(url, params);
     const isGet = method === 'GET';
-    const sendJSON = sendType === 'json';
-    const _headers = !sendJSON ? headersMapper.html : headersMapper.json;
 
-    let body;
-    if (isGet) {
-      body = null;
-    } else {
-      body = sendJSON ? data : JSON.stringify(data);
-    }
-    const fetchOptions: FetchOptions = Object.assign({}, {
+    /** 如果是 GET 请求，则不需要 body */
+    const bodyData = !isGet ? {
+      body: this.dataFormatFilter(data)
+    } : null;
+    const _headers = !isGet && IsObj(bodyData.body) ? headersMapper.json : headersMapper.html;
+
+    const fetchOptions: RequestInit = Object.assign({}, {
       method,
-      headers: Object.assign({}, _headers, this.commonHeaders, headers),
+      headers: Object.assign({}, _headers, this.config.commonHeaders, headers),
       ...other
-    }, {
-      body
-    });
+    }, bodyData);
 
-    const result = {};
+    const result: {
+      data?: {};
+      originRes?: {};
+      originReq?: {};
+      err?: string;
+    } = {};
 
     try {
-      /** 1. 尝试发送远端请求, 并解析结果 */
-      const fetchRes = await fetch(_url, fetchOptions);
+      /**
+       * 1. 尝试发送远端请求, 并解析结果
+       */
+      const fetchRes = await fetch(fetchInput, fetchOptions);
 
       const isJsonRes = isResJson(fetchRes);
 
@@ -395,38 +390,34 @@ class RequestClass extends EventEmitterClass {
         onError(e);
       }
 
-      /** 执行 resPipe 的时机 */
-      if (typeof resData !== 'string') {
-        resData = this.execPipeQueue({ ...resData }, this.resPipeQueue);
-      }
+      resData = this.execMiddlewares(resData, this.afterResMiddlewares);
 
       Object.assign(result, {
         data: resData,
         originRes: fetchRes,
-        originReq: fetchOptions
+        originReq: fetchOptions,
+        err: null
       });
 
-      /** 2. 尝试对远端的 res 进行 status 判定 */
-      const isPass = _checkStatus.call(this, fetchRes);
+      /**
+       * 2. 尝试对 res 进行 status 判定
+       */
+      const isPass = this.checkStatus.call(this, fetchRes);
 
-      /** 3. 如果不成功，则返回包装过的信息 */
+      /**
+       * 3. 如果不成功，进入错误 onError 错误处理机制
+       */
       if (!isPass) {
-        const checkInfo = {
-          ...result,
-          err: 'checkStatus false.',
-        };
-        onError(checkInfo);
-        return returnRaw ? checkInfo : checkInfo.data;
+        result.err = 'checkStatus false.';
+        onError(result);
+        // return returnRaw ? checkFailRes : checkFailRes.data;
       }
 
       this.onRes(result);
     } catch (e) {
-      /** 如果有传入 onError，则不广播全局的 onErr 事件 */
-      // IsFunc(onError) ? onError(e) : this.onErr(e);
       onError(e);
 
       Object.assign(result, {
-        data: null,
         err: e
       });
     }
