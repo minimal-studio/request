@@ -111,7 +111,7 @@ $R.on('onErr', function errHandle(data) {
 })
 ```
 
-### 中间件
+### 中间件 Middleware
 
 中间件处理有两个触发时机, 一旦注册，则每次请求都会触发，__并且原来用于提交的 data 将会被中间件返回的值替换__。
 
@@ -134,11 +134,13 @@ let postRes = await $R.post('/item-list', data, options);
 
 通讯加密
 
-```js
+```ts
 import { encrypt, decrypt } from 'uke-request/request-middleware/encrypt-helper';
+import { compress, decompress } from 'uke-request/request-middleware/compress-helper';
 
 const encryptKey = '123';
 
+// 使用加密解密
 $R.use([encrypt(encryptKey), decrypt(encryptKey)]);
 
 // $R 会将 {ID: '321'} 以 '123' 为加密 key 进行 rc4 加密并发送到服务器
@@ -146,6 +148,28 @@ $R.use([encrypt(encryptKey), decrypt(encryptKey)]);
 const resPost = await $R.post(testUrl + '/encrypt', {
   ID: '321'
 });
+
+// 使用内容压缩
+// dataWrapper、dataWrapperBeforeDecompress、dataWrapperAfterDecompress 均为格式调整回调，
+interface CompressParams {
+  data: {};
+  isCompress: boolean;
+}
+
+interface DecompressParams {
+  data: string;
+  isCompress: boolean;
+}
+const dataWrapper(data: CompressParams): CompressParams => {};
+const dataWrapperBeforeDecompress(data: DecompressParams): DecompressParams => {};
+const dataWrapperAfterDecompress(data: DecompressParams): DecompressParams => {};
+
+$R.use([
+  compress(limitedLen, dataWrapper),
+  decompress(dataWrapperBeforeDecompress, dataWrapperAfterDecompress)
+]);
+
+// 如果消息体的长度大于 limitedLen，则会将消息进行 lzma 压缩
 ```
 
 ## `$R` API

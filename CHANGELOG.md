@@ -23,12 +23,11 @@
 
 ### 重新设计的 API
 
-- request，重新设计，兼容旧版的 RESTFul 模式，可使用中间件机制处理数据。
+- 重新设计 `RequestClass` 的机制，兼容旧版的 `RESTFul` 模式，同时扩展了中间件 `(Middleware)` 机制处理数据。
+- 内置内容加密、内容压缩的中间件 `(Middleware)`
 
 ```js
 import { RequestClass } from 'uke-request';
-// 使用内置的通讯加密中间件
-import { RequestClass } from 'uke-request/';
 
 const $R = new RequestClass();
 
