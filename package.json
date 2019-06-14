@@ -3,24 +3,20 @@
   "version": "1.0.0",
   "description": "通讯加密，消息压缩，RESTFul",
   "scripts": {
-    "publish": "npm publish ./build",
-    "release": "npm version patch; npm run publish:build",
-    "publish:build": "npm run build; npm run publish",
-    "build": "rm -rf ./build/; npm run build:babel; npm run build:copy-files",
-    "build:babel": "NODE_ENV=production babel ./src --out-dir ./build --ignore spec.js",
-    "build:copy-files": "NODE_ENV=production babel-node ./scripts/copy-files.js",
-    "jsdoc": "jsdoc -c .jsdoc.json ./src",
+    "publish": "npm publish ./dist",
+    "release": "npm run build:ts; npm run publish",
+    "build:ts": "rm -rf ./dist; tsc; npm run copy-files",
+    "copy-files": "NODE_ENV=production node ./scripts/copy-files-ts.js",
     "docz:dev": "docz dev",
     "docz:build": "NODE_ENV=production docz build",
     "test": "jest"
   },
   "peerDependencies": {
-    "basic-helper": "^3.0.1"
+    "basic-helper": "^3.0.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.5",
-    "@babel/node": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.0.0",
     "@types/jest": "^24.0.13",
@@ -41,10 +37,8 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-react": "^7.12.3",
-    "foodoc": "^0.0.9",
     "fs-extra": "^7.0.0",
     "jest": "^23.6.0",
-    "jsdoc": "^3.5.5",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-hot-loader": "^4.8.4",
