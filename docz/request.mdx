@@ -77,7 +77,8 @@ import { encrypt, decrypt } from '../src/request-middleware/encrypt-helper'
       $R.use([encrypt('123'), decrypt('123')])
       async function getRequest() {
         const resPost = await $R.post(testUrl + '/encrypt', {
-          ID: 123
+          ID: 123,
+          encrypt: 'true'
         });
         setRes({
           resPost,
@@ -113,28 +114,33 @@ import { encrypt, decrypt } from '../src/request-middleware/encrypt-helper'
       const testUrl = 'http://127.0.0.1:5777';
       const $R = new RequestClass();
       const [requestRes, setRes] = useState(null);
-      function dataWrapper(data) {
-        return data
+      function dataWrapperCompress(data) {
+        return {
+          data: data.data,
+          isCompress: data.isCompress
+        }
       }
       function dataWrapperBeforeDecompress(data) {
-        console.log(data)
         return {
-          data
+          data: data.data,
+          isCompress: data.isCompress
         }
       }
       function dataWrapperAfterDecompress(data) {
         return {
-          data
+          data: data.data,
+          isCompress: data.isCompress
         }
       }
-      /** 使用加密解密中间件 */
-      $R.use([compress(1024, dataWrapper), decompress(
+      /** 使用压缩中间件 */
+      $R.use([compress(5, dataWrapperCompress), decompress(
         dataWrapperBeforeDecompress,
         dataWrapperAfterDecompress
       )])
       async function getRequest() {
         const resPost = await $R.post(testUrl + '/compress', {
-          ID: 123
+          ID: 123,
+          compress: 'mark'
         });
         setRes({
           resPost,
