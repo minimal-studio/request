@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.2
+
+- 调整 getUrlParams 返回类型
+
 ## 1.0.1
 
 - `getUrlParams` 新增可以解码 `base64 query url` 的接口

@@ -41,9 +41,11 @@ export function fromBase64Str(str: string) {
  */
 export function getUrlParams(
   targetKey?: string, href?: string, fromBase64?: boolean = false
-): string | UrlParamsRes {
+): string | object {
   const _href = href || (window ? window.location.href : '');
-  if (!_href) return {};
+  if (!_href) {
+    return {};
+  }
 
   const searchs = _href.split('?')[1];
   const resultObj: UrlParamsRes = {};
