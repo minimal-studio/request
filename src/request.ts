@@ -158,14 +158,23 @@ class RequestClass extends EventEmitterClass {
     if (after) this.afterResMiddlewares.push(...arrayFilter(after));
   }
 
-  execMiddlewares = (targetData: {}, targetMiddlewares: Function[]) => {
+  /**
+   * 中间件执行器，考虑到可能有异步的中间件，所以使用了递归函数做 async/await 保证执行顺序和返回结果正确
+   */
+  execMiddlewares = async (targetData: {}, targetMiddlewares: Function[]) => {
     if (!targetMiddlewares) return targetData;
     let nextData = IsObj(targetData) ? Object.assign({}, targetData) : targetData;
-    targetMiddlewares.forEach((middleware) => {
-      if (IsFunc(middleware)) {
-        nextData = middleware(nextData);
+    const fnRecursive = async (currIdx: number) => {
+      if (currIdx < targetMiddlewares.length) {
+        const nextIdx = currIdx + 1;
+        const middleware = targetMiddlewares[currIdx];
+        if (IsFunc(middleware)) {
+          nextData = await middleware(nextData);
+        }
+        fnRecursive(nextIdx);
       }
-    });
+    };
+    await fnRecursive(0);
     return nextData;
   }
 
@@ -330,11 +339,11 @@ class RequestClass extends EventEmitterClass {
   /**
    * 在请求前 use middleware
    */
-  dataFormatFilter = (data: {}) => {
-    const _data = this.execMiddlewares(data, this.beforeReqMiddlewares);
-    const sendJSON = IsObj(_data);
-    const nextData = sendJSON ? _data : JSON.stringify(_data);
-    return nextData;
+  dataFormatFilter = async (data: {}) => {
+    const _data = await this.execMiddlewares(data, this.beforeReqMiddlewares);
+    // const sendJSON = IsObj(_data);
+    // const nextData = !sendJSON ? _data : JSON.stringify(_data);
+    return _data;
   }
 
   /**
@@ -356,16 +365,31 @@ class RequestClass extends EventEmitterClass {
     const isGet = method === 'GET';
 
     /** 如果是 GET 请求，则不需要 body */
-    const bodyData = !isGet ? {
-      body: this.dataFormatFilter(data)
-    } : null;
-    const _headers = !isGet && IsObj(bodyData.body) ? headersMapper.json : headersMapper.html;
+    let bodyData = null;
+    let _headers;
+    if (!isGet) {
+      const body = await this.dataFormatFilter(data);
+      const isJSONData = IsObj(body);
+      bodyData = {
+        body: isJSONData ? JSON.stringify(body) : body
+      };
+      if (!isGet && isJSONData) {
+        _headers = headersMapper.json;
+      } else {
+        _headers = headersMapper.html;
+      }
+    }
 
-    const fetchOptions: RequestInit = Object.assign({}, {
-      method,
-      headers: Object.assign({}, _headers, this.config.commonHeaders, headers),
-      ...other
-    }, bodyData);
+    const fetchOptions: RequestInit = Object.assign(
+      {},
+      {
+        method,
+        headers: Object.assign({}, _headers, this.config.commonHeaders, headers),
+        ...other
+      },
+      bodyData
+    );
+    // console.log(bodyData, method)
 
     const result: {
       data?: {};
@@ -390,7 +414,7 @@ class RequestClass extends EventEmitterClass {
         onError(e);
       }
 
-      resData = this.execMiddlewares(resData, this.afterResMiddlewares);
+      resData = await this.execMiddlewares(resData, this.afterResMiddlewares);
 
       Object.assign(result, {
         data: resData,

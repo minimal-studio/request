@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 
 import { LZMA } from 'lzma/src/lzma_worker';
+import { CallFunc } from 'basic-helper';
 
 function convertFormatedHexToBytes(hex: string) {
   let bytes = [];
@@ -29,6 +30,18 @@ function convertToFormatedHex(byteArr: number[]) {
   return hexStr.trim();
 }
 
+interface CompressParams {
+  data: {};
+  isCompress: boolean;
+}
+
+interface DecompressParams {
+  data: string;
+  isCompress: boolean;
+}
+
+type MiddlewareCallback<T> = (parmas: T) => T;
+
 interface CompressOptions {
   data: {};
   compressLenLimit: number;
@@ -39,21 +52,31 @@ interface CompressOptions {
  *
  * @export
  * @param {object} options {data, compressLenLimit = 2048}
- * @returns {promise}
  */
-export function compressFilter(options: CompressOptions) {
+export function compressFilter(options: CompressOptions): Promise<CompressParams> {
   const { data, compressLenLimit = 2048 } = options;
   return new Promise((resolve, reject) => {
-    if (!data) return resolve(data);
+    if (!data) {
+      return resolve({
+        data,
+        isCompress: false
+      });
+    }
 
     const strPostData = JSON.stringify(data);
     if (strPostData.length > compressLenLimit) {
       LZMA.compress(JSON.stringify(data), 1, (decompressResult: number[]) => {
         const resultStr = convertToFormatedHex(decompressResult).toString();
-        resolve(resultStr);
+        resolve({
+          data: resultStr,
+          isCompress: true
+        });
       });
     } else {
-      return resolve(data);
+      return resolve({
+        data,
+        isCompress: false
+      });
     }
   });
 }
@@ -65,49 +88,54 @@ export function compressFilter(options: CompressOptions) {
  * @param {string} data 压缩后的字符串
  * @returns {string}
  */
-export function decompressFilter(data: string | {}) {
+export function decompressFilter(params: DecompressParams): Promise<DecompressParams> {
   return new Promise((resolve, reject) => {
-    if (typeof data === 'string') {
+    const { data, isCompress } = params;
+    if (isCompress && typeof data === 'string') {
       const decompressData = convertFormatedHexToBytes(data);
+      const resData = {
+        data: '',
+        isCompress
+      };
       LZMA.decompress(decompressData, (result: string, err: Error) => {
-        let resData = {};
         if (err) return reject(err);
         try {
-          resData = JSON.parse(result);
+          resData.data = JSON.parse(result);
         } catch (e) {
           reject(new Error('decompress fail'));
         }
         resolve(resData);
       });
     } else {
-      resolve(data);
+      resolve(params);
     }
   });
 }
 
-const defaultDataWrapper = (data: any) => data;
-
-export function compress(compressLenLimit: number, dataWrapper: Function = defaultDataWrapper) {
+export function compress(
+  compressLenLimit: number,
+  dataWrapperCompress: MiddlewareCallback<CompressParams>
+) {
   return async (data) => {
     const compressOptions: CompressOptions = {
       data,
       compressLenLimit,
     };
     let res = await compressFilter(compressOptions);
-    res = dataWrapper(res);
+    res = CallFunc(dataWrapperCompress)(res);
     return res;
   };
 }
 
 export function decompress(
-  dataWrapperBefore: Function = defaultDataWrapper,
-  dataWrapperAfter: Function = defaultDataWrapper
+  dataWrapperBefore: MiddlewareCallback<DecompressParams>,
+  dataWrapperAfter: MiddlewareCallback<DecompressParams>
 ) {
   return async (data) => {
     const decompressData = dataWrapperBefore(data);
     let res = await decompressFilter(decompressData);
-    res = dataWrapperAfter(res);
-    console.log(res, 'decompress')
+    res = CallFunc(dataWrapperAfter)(res);
+    console.log(res, 'decompress');
     return res;
   };
 }

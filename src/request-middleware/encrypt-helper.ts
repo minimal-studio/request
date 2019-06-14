@@ -100,6 +100,7 @@ interface DecryptOptions {
  */
 export function decryptFilter(options: DecryptOptions) {
   const { data, key } = options;
+  if (typeof data !== 'string') return data;
   const encryptKey = keyFilter(key);
   let _data = data;
 
@@ -131,9 +132,8 @@ export function encrypt(key: string) {
 }
 
 export function decrypt(key: string) {
-  return (data: string) => {
+  return async (data: string) => {
     const res = decryptFilter({ data, key });
-    // console.log('decrypt', res);
     return res;
   };
 }
