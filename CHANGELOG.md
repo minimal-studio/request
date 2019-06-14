@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.1
+
+- `getUrlParams` 新增可以解码 `base64 query url` 的接口
+
 ## 1.0.0
 
 更注重基本的通讯功能，其他功能通过中间件形式嵌入。

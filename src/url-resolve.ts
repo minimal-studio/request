@@ -36,9 +36,12 @@ export function fromBase64Str(str: string) {
  *
  * @param {string | undefined} targetKey 需要获取的值的 key, 例如 id=123, 此时为 id
  * @param {string} href 需要获取的字符串，默认为 window.location.href
+ * @param {boolean} fromBase64 是否 base64 的字符串
  * @returns {string | object} 返回获取的结果
  */
-export function getUrlParams(targetKey?: string, href?: string): string | UrlParamsRes {
+export function getUrlParams(
+  targetKey?: string, href?: string, fromBase64?: boolean = false
+): string | UrlParamsRes {
   const _href = href || (window ? window.location.href : '');
   if (!_href) return {};
 
@@ -48,8 +51,9 @@ export function getUrlParams(targetKey?: string, href?: string): string | UrlPar
     const params = searchs.split(/&+/);
     let parentKey: string | null = null;
     params.forEach((item) => {
-      const [key, val] = item.split('=');
+      let [key, val] = item.split('=');
       if (!key) return;
+      if (fromBase64) val = fromBase64Str(val);
       if (val === undefined && parentKey) {
         resultObj[parentKey] = `${resultObj[parentKey]}&${key}`;
         parentKey = null;

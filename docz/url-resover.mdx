@@ -5,14 +5,26 @@ route: /UrlResolver
 
 import { useState } from 'react';
 import { Playground } from 'docz'
-import { getUrlParams } from '../src/url-resolve'
+import { urlParamsToQuery, getUrlParams } from '../src/url-resolve'
 
 # URL解析器
+
+## Basic Usage
 
 <Playground>
   {
     () => {
-      const defaultUrl = "http://127.0.0.1:55555/#/?_R=Chat&ID=qqq";
+      const baseUrl = "http://127.0.0.1:55555";
+      const params = {
+        ID: '123',
+        other: '321',
+        url: 'https://google.com'
+      }
+      const defaultUrl = urlParamsToQuery({
+        url: baseUrl,
+        params,
+        toBase64: false
+      })
       const [urlRes, setUrl] = useState(defaultUrl);
       return (
         <div>
@@ -22,7 +34,40 @@ import { getUrlParams } from '../src/url-resolve'
             onChange={e => setUrl(e.target.value)} />
           <hr />
           <div>解析结果: {
-            JSON.stringify(getUrlParams(null, urlRes))
+            JSON.stringify(getUrlParams(null, urlRes, false))
+          }</div>
+        </div>
+      )
+    }
+  }
+</Playground>
+
+## Base64 Query Url
+
+<Playground>
+  {
+    () => {
+      const baseUrl = "http://127.0.0.1:55555";
+      const params = {
+        ID: '123',
+        other: '321',
+        url: 'https://google.com'
+      }
+      const defaultUrl = urlParamsToQuery({
+        url: baseUrl,
+        params,
+        toBase64: true
+      })
+      const [urlRes, setUrl] = useState(defaultUrl);
+      return (
+        <div>
+          <textarea
+            className="form-control"
+            defaultValue={defaultUrl}
+            onChange={e => setUrl(e.target.value)} />
+          <hr />
+          <div>解析结果: {
+            JSON.stringify(getUrlParams(null, urlRes, true))
           }</div>
         </div>
       )
