@@ -94,8 +94,6 @@ class RequestClass extends EventEmitterClass {
 
   beforeReqMiddlewares: Function[] = [];
 
-  middleWares: Function[];
-
   constructor(config?: RequestConfig) {
     super();
     const defaultConfig: RequestConfig = {

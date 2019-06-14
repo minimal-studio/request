@@ -112,11 +112,19 @@ export function decompressFilter(params: DecompressParams): Promise<DecompressPa
   });
 }
 
+/**
+ * Request 的内置压缩中间件
+ *
+ * @export
+ * @param {number} compressLenLimit
+ * @param {MiddlewareCallback<CompressParams>} dataWrapperCompress
+ * @returns
+ */
 export function compress(
   compressLenLimit: number,
   dataWrapperCompress: MiddlewareCallback<CompressParams>
 ) {
-  return async (data) => {
+  return async (data: {}) => {
     const compressOptions: CompressOptions = {
       data,
       compressLenLimit,
@@ -127,15 +135,23 @@ export function compress(
   };
 }
 
+/**
+ * Request 的内置解压中间件
+ *
+ * @export
+ * @param {MiddlewareCallback<DecompressParams>} dataWrapperBefore
+ * @param {MiddlewareCallback<DecompressParams>} dataWrapperAfter
+ * @returns
+ */
 export function decompress(
-  dataWrapperBefore: MiddlewareCallback<DecompressParams>,
+  // dataWrapperBefore: MiddlewareCallback<DecompressParams>,
+  dataWrapperBefore: Function,
   dataWrapperAfter: MiddlewareCallback<DecompressParams>
 ) {
-  return async (data) => {
+  return async (data: {}) => {
     const decompressData = dataWrapperBefore(data);
     let res = await decompressFilter(decompressData);
     res = CallFunc(dataWrapperAfter)(res);
-    console.log(res, 'decompress');
     return res;
   };
 }

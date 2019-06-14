@@ -54,7 +54,8 @@ const encryKeyStore: {
  */
 function keyFilter(key: string) {
   if (!encryKeyStore[key]) {
-    encryKeyStore[key] = Array.isArray(key) ? restoreKey(key) : key;
+    // encryKeyStore[key] = Array.isArray(key) ? restoreKey(key) : key;
+    encryKeyStore[key] = key;
   }
   return encryKeyStore[key];
 }
