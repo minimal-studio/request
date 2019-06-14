@@ -44,9 +44,7 @@ app.post('/encrypt', bodyParser.text({ type: 'text/html' }), (req, res) => {
 });
 
 app.post('/compress', bodyParser.json(), (req, res) => {
-  console.log(req.body);
-  // res.json(req.body);
-  res.json({});
+  res.json(req.body);
 });
 
 // 最后处理所有错误
