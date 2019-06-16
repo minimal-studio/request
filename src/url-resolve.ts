@@ -40,7 +40,7 @@ export function fromBase64Str(str: string) {
  * @returns {string | object} 返回获取的结果
  */
 export function getUrlParams(
-  targetKey?: string, href?: string, fromBase64?: boolean = false
+  targetKey?: string, href?: string, fromBase64?: boolean
 ): string | object {
   const _href = href || (window ? window.location.href : '');
   if (!_href) {
