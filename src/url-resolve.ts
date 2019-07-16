@@ -28,7 +28,13 @@ export function toBase64Str(str = '') {
  * @returns {string} 普通字符串
  */
 export function fromBase64Str(str: string) {
-  return decodeURIComponent(escape(atob(str)));
+  let res;
+  try {
+    res = decodeURIComponent(escape(atob(str)));
+  } catch (e) {
+    console.log(e, str);
+  }
+  return res;
 }
 
 /**

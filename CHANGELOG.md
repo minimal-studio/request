@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.3
+
+- 调整 formBase64ToStr 的实现
+
 ## 1.0.2
 
 - 调整 getUrlParams 返回类型
