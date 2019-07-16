@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.4
+
+- formBase64ToStr 如果遇到错误，直接返回参数
+
 ## 1.0.3
 
 - 调整 formBase64ToStr 的实现

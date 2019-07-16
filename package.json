@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "通讯加密，消息压缩，RESTFul",
   "scripts": {
     "publish": "npm publish ./dist",

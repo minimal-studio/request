@@ -32,6 +32,7 @@ export function fromBase64Str(str: string) {
   try {
     res = decodeURIComponent(escape(atob(str)));
   } catch (e) {
+    res = str;
     console.log(e, str);
   }
   return res;
