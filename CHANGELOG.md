@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.3
+
+- 调整发送请求的数据类型的判断
+
 ## 1.0.2
 
 - 调整 getUrlParams 返回类型
