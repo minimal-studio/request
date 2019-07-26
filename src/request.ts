@@ -367,11 +367,11 @@ class RequestClass extends EventEmitterClass {
     let _headers;
     if (!isGet) {
       const body = await this.dataFormatFilter(data);
-      const isJSONData = IsObj(body);
+      const isStringData = typeof body === 'string';
       bodyData = {
-        body: isJSONData ? JSON.stringify(body) : body
+        body: isStringData ? body : JSON.stringify(body)
       };
-      if (!isGet && isJSONData) {
+      if (!isGet && !isStringData) {
         _headers = headersMapper.json;
       } else {
         _headers = headersMapper.html;

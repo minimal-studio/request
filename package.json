@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "通讯加密，消息压缩，RESTFul",
   "scripts": {
     "publish": "npm publish ./dist",
@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "basic-helper": "^3.0.3"
+    "basic-helper": "^3.0.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
@@ -24,7 +24,7 @@
     "@typescript-eslint/parser": "^1.9.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "basic-helper": "^3.0.3",
+    "basic-helper": "^3.0.4",
     "docz": "^1.2.0",
     "docz-plugin-css": "^0.11.0",
     "docz-plugin-netlify": "^1.1.4",

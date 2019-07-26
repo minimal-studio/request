@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.5
+
+- 调整发送请求的数据类型的判断
+
 ## 1.0.4
 
 - formBase64ToStr 如果遇到错误，直接返回参数
