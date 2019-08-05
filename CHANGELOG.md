@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.0.6
+
+- 增强 request 的参数检查
+
 ## 1.0.5
 
 - 调整发送请求的数据类型的判断
