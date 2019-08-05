@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-class-members */
 /**
  * Lib: Uke Request
  * Author: Alex
@@ -39,7 +40,7 @@ export type RequestSendTypes = 'json' | 'html';
 export interface RequestParams {
   url: string;
   method?: RequestMethod;
-  sendType?: RequestSendTypes;
+  // sendType?: RequestSendTypes;
   data: {};
   headers?: {};
   params?: ParamEntity;
@@ -47,9 +48,13 @@ export interface RequestParams {
   onError?: Function;
 }
 
-// export interface FetchOptions extends RequestInit {
-
-// }
+export interface RequestResStruct {
+  data?: {};
+  originRes?: {};
+  originReq?: {};
+  err?: string;
+}
+export type RequestRes = RequestResStruct | RequestResStruct['data'];
 
 const headersMapper = {
   json: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -309,14 +314,13 @@ class RequestClass extends EventEmitterClass {
    * @returns  {promise}
    * @memberof RequestClass
    */
-  async get(url: string | {}, options?: RequestParams) {
+  async get<T = {}>(url: string | RequestParams, options?: RequestParams) {
     const isStringUrl = typeof url === 'string';
-    const reqConfig = Object.assign({}, {
+    const reqConfig: RequestParams = Object.assign({}, {
       method: 'GET',
-      ...options
-    }, isStringUrl ? { url } : url);
+    }, options, isStringUrl ? { url } : url);
 
-    return this.request(reqConfig);
+    return this.request<T>(reqConfig);
   }
 
   /**
@@ -326,10 +330,12 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise} 生产的函数
    * @memberof RequestClass
    */
-  _reqFactory(method: RequestMethod) {
+  _reqFactory<T = {}>(
+    method: RequestMethod
+  ) {
     return (
       url: string, data: object | string, options = {}
-    ) => this.request(Object.assign(options, {
+    ) => this.request<T>(Object.assign(options, {
       url, data, method
     }));
   }
@@ -345,12 +351,14 @@ class RequestClass extends EventEmitterClass {
   }
 
   /**
-   * 底层请求接口，GET POST DELETE PATCH 的实际接口
-   *
-   * @param {RequestParams} options
-   * @returns {promise} 返回请求的 promise 对象
-   */
-  async request(requestParams: RequestParams) {
+ * 底层请求接口，GET POST DELETE PATCH 的实际接口
+ *
+ * @param {RequestParams} options
+ * @returns {promise} 返回请求的 promise 对象
+ */
+  async request<T extends RequestRes = RequestRes>(
+    requestParams: RequestParams
+  ): Promise<T> {
     const {
       url, params, data,
       headers, method = 'POST',
@@ -389,17 +397,12 @@ class RequestClass extends EventEmitterClass {
     );
     // console.log(bodyData, method)
 
-    const result: {
-      data?: {};
-      originRes?: {};
-      originReq?: {};
-      err?: string;
-    } = {};
+    const result: RequestResStruct = {};
 
     try {
-      /**
-       * 1. 尝试发送远端请求, 并解析结果
-       */
+    /**
+     * 1. 尝试发送远端请求, 并解析结果
+     */
       const fetchRes = await fetch(fetchInput, fetchOptions);
 
       const isJsonRes = isResJson(fetchRes);
@@ -422,17 +425,17 @@ class RequestClass extends EventEmitterClass {
       });
 
       /**
-       * 2. 尝试对 res 进行 status 判定
-       */
+     * 2. 尝试对 res 进行 status 判定
+     */
       const isPass = this.checkStatus.call(this, fetchRes);
 
       /**
-       * 3. 如果不成功，进入错误 onError 错误处理机制
-       */
+     * 3. 如果不成功，进入错误 onError 错误处理机制
+     */
       if (!isPass) {
         result.err = 'checkStatus false.';
         onError(result);
-        // return returnRaw ? checkFailRes : checkFailRes.data;
+      // return returnRaw ? checkFailRes : checkFailRes.data;
       }
 
       this.onRes(result);
