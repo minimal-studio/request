@@ -23,15 +23,17 @@ import {
 
 export interface RequestConfig {
   baseUrl: string;
-  commonHeaders: {};
-  timeout: number;
-  resMark: string;
-  errMark: string;
+  commonHeaders?: {};
+  timeout?: number;
+  resMark?: string;
+  errMark?: string;
 }
 
+export type MiddlewareFunc = (data) => any;
+
 export interface MiddlewareOptions {
-  after?: Function | Function[];
-  before?: Function | Function[];
+  after?: MiddlewareFunc | MiddlewareFunc[];
+  before?: MiddlewareFunc | MiddlewareFunc[];
 }
 
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
@@ -45,7 +47,7 @@ export interface RequestParams {
   headers?: {};
   params?: ParamEntity;
   returnRaw?: boolean;
-  onError?: Function;
+  onError?: (event) => void;
 }
 
 export interface RequestResStruct {
@@ -95,9 +97,9 @@ function arrayFilter(arg: any) {
 class RequestClass extends EventEmitterClass {
   config: RequestConfig;
 
-  afterResMiddlewares: Function[] = [];
+  afterResMiddlewares: MiddlewareFunc[] = [];
 
-  beforeReqMiddlewares: Function[] = [];
+  beforeReqMiddlewares: MiddlewareFunc[] = [];
 
   constructor(config?: RequestConfig) {
     super();
@@ -112,12 +114,12 @@ class RequestClass extends EventEmitterClass {
     this.config = Object.assign({}, defaultConfig, this.setConfig(config));
   }
 
-  resPipe(pipeFunc?: Function) {
+  resPipe(pipeFunc?: MiddlewareFunc) {
     console.log('resPipe will be deprecated, call "request.use({ after: fn })"');
     this.use([null, pipeFunc]);
   }
 
-  reqPipe(pipeFunc: Function) {
+  reqPipe(pipeFunc: MiddlewareFunc) {
     console.log('reqPipe will be deprecated, call "request.use({ before: fn })"');
     this.use([pipeFunc]);
   }
@@ -125,7 +127,7 @@ class RequestClass extends EventEmitterClass {
   /**
    * 在发请求前执行的 middleware
    */
-  useBefore = (fn: Function | Function[]) => {
+  useBefore = (fn: MiddlewareFunc | MiddlewareFunc[]) => {
     this.use({
       before: fn
     });
@@ -134,7 +136,7 @@ class RequestClass extends EventEmitterClass {
   /**
    * 在发请求前执行的 middleware
    */
-  useAfter = (fn: Function | Function[]) => {
+  useAfter = (fn: MiddlewareFunc | MiddlewareFunc[]) => {
     this.use({
       after: fn
     });
@@ -143,11 +145,11 @@ class RequestClass extends EventEmitterClass {
   /**
    * 使用中间件
    *
-   * @param {MiddlewareOptions | Function[]} options 如果为数组，则第一个为 before, 第二个为 after
+   * @param {MiddlewareOptions | MiddlewareFunc[]} options 如果为数组，则第一个为 before, 第二个为 after
    *
    * @memberof RequestClass
    */
-  use = (options: MiddlewareOptions | Function[]) => {
+  use = (options: MiddlewareOptions | MiddlewareFunc[]) => {
     let before;
     let after;
     if (Array.isArray(options)) {
