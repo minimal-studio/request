@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "1.0.9",
+  "version": "1.1.0-rc0",
   "description": "基于 fetch API 的 HTTP 请求封装，内置中间件（内置 RC4 数据加解密、LZMA 数据压解缩中间件）机制、RESTFul API 支持。",
   "scripts": {
     "publish": "npm publish ./dist",
@@ -24,7 +24,7 @@
     "@typescript-eslint/parser": "^1.9.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "basic-helper": "^3.0.4",
+    "basic-helper": "^3.0.7",
     "docz": "^1.2.0",
     "docz-plugin-css": "^0.11.0",
     "docz-plugin-netlify": "^1.1.4",
@@ -43,8 +43,8 @@
     "react-dom": "^16.8.6",
     "react-hot-loader": "^4.8.4",
     "ts-jest": "^24.0.2",
-    "typescript": "3.4.5",
-    "ukelli-ui": "^2.17.10"
+    "typescript": "^3.6.3",
+    "ukelli-ui": "^3.1.0-rc2"
   },
   "repository": {
     "type": "git",
