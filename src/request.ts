@@ -39,15 +39,19 @@ export interface MiddlewareOptions {
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
 export type RequestSendTypes = 'json' | 'html';
 
-export interface RequestParams {
+export interface BaseRequestParams {
   url: string;
   method?: RequestMethod;
   // sendType?: RequestSendTypes;
-  data: {};
+  data?: {};
   headers?: {};
   params?: ParamEntity;
   returnRaw?: boolean;
   onError?: (event) => void;
+}
+
+export interface RequestParams extends BaseRequestParams {
+  data: {};
 }
 
 export interface RequestResStruct {
@@ -94,7 +98,7 @@ function arrayFilter(arg: any) {
  * })
  *
  */
-class RequestClass extends EventEmitterClass {
+class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
   config: RequestConfig;
 
   afterResMiddlewares: MiddlewareFunc[] = [];
@@ -276,7 +280,9 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  post = this._reqFactory('POST');
+  post = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+    url, data, method: 'POST'
+  }))
 
   /**
    * 发送 PUT 请求
@@ -286,7 +292,9 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  put = this._reqFactory('PUT');
+  put = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+    url, data, method: 'PUT'
+  }))
 
   /**
    * 发送 DELETE 请求
@@ -296,7 +304,9 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  del = this._reqFactory('DELETE');
+  del = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+    url, data, method: 'DELETE'
+  }))
 
   /**
    * 发送 PATCH 请求
@@ -306,7 +316,9 @@ class RequestClass extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  patch = this._reqFactory('PATCH');
+  patch = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+    url, data, method: 'PATCH'
+  }))
 
   /**
    * 发送 Get 请求
@@ -316,31 +328,31 @@ class RequestClass extends EventEmitterClass {
    * @returns  {promise}
    * @memberof RequestClass
    */
-  async get<T = {}>(url: string | RequestParams, options?: RequestParams) {
+  async get<T = DefaultResponseType>(url: string | BaseRequestParams, options?: BaseRequestParams) {
     const isStringUrl = typeof url === 'string';
-    const reqConfig: RequestParams = Object.assign({}, {
+    const reqConfig: BaseRequestParams = Object.assign({}, {
       method: 'GET',
     }, options, isStringUrl ? { url } : url);
 
     return this.request<T>(reqConfig);
   }
 
-  /**
-   * 请求对象生成器
-   *
-   * @param {string} method String
-   * @returns {promise} 生产的函数
-   * @memberof RequestClass
-   */
-  _reqFactory<T = {}>(
-    method: RequestMethod
-  ) {
-    return (
-      url: string, data: object | string, options = {}
-    ) => this.request<T>(Object.assign(options, {
-      url, data, method
-    }));
-  }
+  // /**
+  //  * 请求对象生成器
+  //  *
+  //  * @param {string} method String
+  //  * @returns {promise} 生产的函数
+  //  * @memberof RequestClass
+  //  */
+  // _reqFactory<T = {}>(
+  //   method: RequestMethod
+  // ) {
+  //   return (
+  //     url: string, data: object | string, options = {}
+  //   ) => this.request<T>(Object.assign(options, {
+  //     url, data, method
+  //   }));
+  // }
 
   /**
    * 在请求前 use middleware
@@ -359,7 +371,7 @@ class RequestClass extends EventEmitterClass {
  * @returns {promise} 返回请求的 promise 对象
  */
   async request<T extends RequestRes = RequestRes>(
-    requestParams: RequestParams
+    requestParams: BaseRequestParams
   ): Promise<T> {
     const {
       url, params, data,
