@@ -17,6 +17,7 @@ const APIDemo = async () => {
 
     }
   });
+  const resPost = await $R.post<string>('/login', {});
   console.log(resGet);
   if (!res.err) {
     console.log('success');

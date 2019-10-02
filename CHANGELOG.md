@@ -1,5 +1,13 @@
 # Update logs of Uke-request
 
+## 1.0.9
+
+- 添加 post put del patch 等 restful api 的返回类型
+
+## 1.0.8
+
+- 增强 request.get 的参数检查
+
 ## 1.0.7
 
 - 增强 request 的中间件参数检查
