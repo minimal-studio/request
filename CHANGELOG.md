@@ -1,5 +1,9 @@
 # Update logs of Uke-request
 
+## 1.1.0
+
+- 不再导出 RequestClass 的实例 $request，需要手动创建
+
 ## 1.0.9
 
 - 添加 post put del patch 等 restful api 的返回类型
