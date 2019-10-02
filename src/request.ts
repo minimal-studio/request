@@ -280,7 +280,7 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  post = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+  post = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
     url, data, method: 'POST'
   }))
 
@@ -292,7 +292,7 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  put = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+  put = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
     url, data, method: 'PUT'
   }))
 
@@ -304,7 +304,7 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
    * @returns {promise}
    * @memberof RequestClass
    */
-  del = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
+  del = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
     url, data, method: 'DELETE'
   }))
 
@@ -365,14 +365,12 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
   }
 
   /**
- * 底层请求接口，GET POST DELETE PATCH 的实际接口
- *
- * @param {RequestParams} options
- * @returns {promise} 返回请求的 promise 对象
- */
-  async request<T extends RequestRes = RequestRes>(
-    requestParams: BaseRequestParams
-  ): Promise<T> {
+   * 底层请求接口，GET POST DELETE PATCH 的实际接口
+   *
+   * @param {RequestParams} options
+   * @returns {promise} 返回请求的 promise 对象
+   */
+  request = async <T extends RequestRes = RequestRes>(requestParams: BaseRequestParams): Promise<T> => {
     const {
       url, params, data,
       headers, method = 'POST',
@@ -464,8 +462,9 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
     return returnRaw ? result : result.data;
   }
 }
-const $request = new RequestClass();
+// const $request = new RequestClass();
 
 export {
-  $request, RequestClass
+  // $request,
+  RequestClass
 };
