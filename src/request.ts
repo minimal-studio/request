@@ -23,7 +23,7 @@ import {
 
 export interface RequestConfig {
   baseUrl: string;
-  commonHeaders?: {};
+  commonHeaders?: Headers;
   timeout?: number;
   resMark?: string;
   errMark?: string;
@@ -46,7 +46,7 @@ export interface BaseRequestParams {
   data?: {};
   headers?: {};
   params?: ParamEntity;
-  returnRaw?: boolean;
+  // returnRaw?: boolean;
   onError?: (event) => void;
 }
 
@@ -54,13 +54,15 @@ export interface RequestParams extends BaseRequestParams {
   data: {};
 }
 
-export interface RequestResStruct {
-  data?: {};
-  originRes?: {};
-  originReq?: {};
-  err?: string;
+export interface ResData {
+  [key: string]: any;
+  /** 如果返回的结果是 string，则挂在在此字段上 */
+  __text?: string;
+  __originRes?: {};
+  __originReq?: {};
+  __err?: string;
 }
-export type RequestRes = RequestResStruct | RequestResStruct['data'];
+// export type RequestRes = RequestResStruct | RequestResStruct['data'];
 
 const headersMapper = {
   json: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -98,7 +100,7 @@ function arrayFilter(arg: any) {
  * })
  *
  */
-class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
+class RequestClass<DefaultResponseType extends ResData = ResData> extends EventEmitterClass {
   config: RequestConfig;
 
   afterResMiddlewares: MiddlewareFunc[] = [];
@@ -109,7 +111,6 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
     super();
     const defaultConfig: RequestConfig = {
       baseUrl: '',
-      commonHeaders: {},
       timeout: 10 * 1000,
       resMark: 'onRes',
       errMark: 'onErr',
@@ -227,7 +228,7 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
    * @returns {boolean}
    * @memberof RequestClass
    */
-  checkStatus = () => true
+  checkStatus = (fetchRes: Response) => true
 
   /**
    * 解析 url, 可以封装
@@ -370,12 +371,14 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
    * @param {RequestParams} options
    * @returns {promise} 返回请求的 promise 对象
    */
-  request = async <T extends RequestRes = RequestRes>(requestParams: BaseRequestParams): Promise<T> => {
+  request = async <T extends ResData = DefaultResponseType>(
+    requestParams: BaseRequestParams
+  ): Promise<T & ResData> => {
     const {
       url, params, data,
       headers, method = 'POST',
       // sendType = 'json',
-      returnRaw = false,
+      // returnRaw = false,
       onError = this.onErr,
       ...other
     } = requestParams;
@@ -409,17 +412,18 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
     );
     // console.log(bodyData, method)
 
-    const result: RequestResStruct = {};
+    // const result: RequestResStruct = {};
+    let resData: ResData = {};
 
     try {
-    /**
-     * 1. 尝试发送远端请求, 并解析结果
-     */
+      /**
+       * 1. 尝试发送远端请求, 并解析结果
+       */
       const fetchRes = await fetch(fetchInput, fetchOptions);
 
       const isJsonRes = isResJson(fetchRes);
 
-      let resData = {};
+      // let resData = {};
 
       try {
         resData = await (isJsonRes ? fetchRes.json() : fetchRes.text());
@@ -427,39 +431,43 @@ class RequestClass<DefaultResponseType = {}> extends EventEmitterClass {
         onError(e);
       }
 
+      if (typeof resData === 'string') {
+        resData = {
+          __text: resData
+        };
+      }
+
       resData = await this.execMiddlewares(resData, this.afterResMiddlewares);
 
-      Object.assign(result, {
-        data: resData,
-        originRes: fetchRes,
-        originReq: fetchOptions,
-        err: null
+      Object.assign(resData, {
+        __originRes: fetchRes,
+        __originReq: fetchOptions,
+        __err: null
       });
 
       /**
-     * 2. 尝试对 res 进行 status 判定
-     */
+       * 2. 尝试对 res 进行 status 判定
+       */
       const isPass = this.checkStatus.call(this, fetchRes);
 
       /**
-     * 3. 如果不成功，进入错误 onError 错误处理机制
-     */
+       * 3. 如果不成功，进入错误 onError 错误处理机制
+       */
       if (!isPass) {
-        result.err = 'checkStatus false.';
-        onError(result);
-      // return returnRaw ? checkFailRes : checkFailRes.data;
+        resData.__err = 'checkStatus false.';
+        onError(resData);
+        // return returnRaw ? checkFailRes : checkFailRes.data;
       }
 
-      this.onRes(result);
+      this.onRes(resData);
     } catch (e) {
       onError(e);
 
-      Object.assign(result, {
-        err: e
-      });
+      resData.__err = e;
     }
 
-    return returnRaw ? result : result.data;
+    // return returnRaw ? result : result.data;
+    return resData;
   }
 }
 // const $request = new RequestClass();
