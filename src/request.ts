@@ -22,7 +22,7 @@ import {
 } from './url-resolve';
 
 export interface RequestConfig {
-  baseUrl: string;
+  baseUrl?: string;
   commonHeaders?: HeadersInit;
   fetchOptions?: RequestInit;
   timeout?: number;
