@@ -1,6 +1,11 @@
 import { RequestClass } from '../request';
 
-const $R = new RequestClass();
+const $R = new RequestClass({
+  baseUrl: '',
+  fetchOptions: {
+    credentials: 'include'
+  }
+});
 
 interface LoginRes {
   username: string;

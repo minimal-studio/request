@@ -23,7 +23,8 @@ import {
 
 export interface RequestConfig {
   baseUrl: string;
-  commonHeaders?: Headers;
+  commonHeaders?: HeadersInit;
+  fetchOptions?: RequestInit;
   timeout?: number;
   resMark?: string;
   errMark?: string;
@@ -406,8 +407,9 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       {
         method,
         headers: Object.assign({}, _headers, this.config.commonHeaders, headers),
-        ...other
       },
+      this.config.fetchOptions,
+      other,
       bodyData
     );
     // console.log(bodyData, method)
