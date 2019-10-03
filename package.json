@@ -1,6 +1,6 @@
 {
   "name": "uke-request",
-  "version": "1.1.0-rc2",
+  "version": "1.1.0-rc3",
   "description": "基于 fetch API 的 HTTP 请求封装，内置中间件（内置 RC4 数据加解密、LZMA 数据压解缩中间件）机制、RESTFul API 支持。",
   "scripts": {
     "publish": "npm publish ./dist",
@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "basic-helper": "^3.0.4"
+    "basic-helper": "^3.0.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
