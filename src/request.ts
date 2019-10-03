@@ -102,7 +102,12 @@ function arrayFilter(arg: any) {
  *
  */
 class RequestClass<DefaultResponseType extends ResData = ResData> extends EventEmitterClass {
-  config: RequestConfig;
+  config: RequestConfig = {
+    baseUrl: '',
+    timeout: 10 * 1000,
+    resMark: 'onRes',
+    errMark: 'onErr',
+  };
 
   afterResMiddlewares: MiddlewareFunc[] = [];
 
@@ -110,14 +115,8 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   constructor(config?: RequestConfig) {
     super();
-    const defaultConfig: RequestConfig = {
-      baseUrl: '',
-      timeout: 10 * 1000,
-      resMark: 'onRes',
-      errMark: 'onErr',
-    };
-
-    this.config = Object.assign({}, defaultConfig, this.setConfig(config));
+    
+    if(config) this.setConfig(config);
   }
 
   resPipe(pipeFunc?: MiddlewareFunc) {
