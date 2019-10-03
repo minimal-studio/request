@@ -5,7 +5,12 @@
     "outDir": "./dist",
     "declaration": true,
     "module": "commonjs",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
+    "moduleResolution": "node",
     "target": "es5"
   },
   "allowSyntheticDefaultImports": true,
