@@ -115,8 +115,8 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   constructor(config?: RequestConfig) {
     super();
-    
-    if(config) this.setConfig(config);
+
+    if (config) this.setConfig(config);
   }
 
   resPipe(pipeFunc?: MiddlewareFunc) {
@@ -382,7 +382,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       onError = this.onErr,
       ...other
     } = requestParams;
-    const fetchInput = this.urlFilter(url, params);
     const isGet = method === 'GET';
 
     /** 如果是 GET 请求，则不需要 body */
@@ -420,6 +419,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       /**
        * 1. 尝试发送远端请求, 并解析结果
        */
+      const fetchInput = this.urlFilter(url, params);
       const fetchRes = await fetch(fetchInput, fetchOptions);
 
       const isJsonRes = isResJson(fetchRes);
