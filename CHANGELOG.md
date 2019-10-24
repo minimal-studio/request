@@ -4,7 +4,8 @@
 
 - 不再导出 RequestClass 的实例 $request，需要手动创建
 - 统一了返回的格式
-- 在返回的格式中嵌入以下字段
+
+在返回的格式中嵌入以下字段
 
 ```js
 const resData = await $R.post();
