@@ -5,8 +5,6 @@
 [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request)
 [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request)
 
-- [帮助文档](https://request.ukelli.com/)
-
 ## Basic Usage
 
 > Support RESTFul
