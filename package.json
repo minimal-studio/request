@@ -1,9 +1,9 @@
 {
-  "name": "uke-request",
-  "version": "1.1.0",
+  "name": "@mini-code/request",
+  "version": "1.0.0-alpha0",
   "description": "基于 fetch API 的 HTTP 请求封装，内置中间件（内置 RC4 数据加解密、LZMA 数据压解缩中间件）机制、RESTFul API 支持。",
   "scripts": {
-    "publish": "npm publish ./dist",
+    "publish": "npm publish ./dist --access public",
     "release": "npm run build:ts; npm run publish",
     "build:ts": "rm -rf ./dist; tsc; npm run copy-files",
     "copy-files": "NODE_ENV=production node ./scripts/copy-files-ts.js",
@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "basic-helper": "^3.0.7"
+    "@mini-code/base-func": "^3.0.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
@@ -24,7 +24,7 @@
     "@typescript-eslint/parser": "^1.9.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "basic-helper": "^3.0.7",
+    "@mini-code/base-func": "^3.0.7",
     "docz": "^1.2.0",
     "docz-plugin-css": "^0.11.0",
     "docz-plugin-netlify": "^1.1.4",
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/SANGET/uke-request.git"
+    "url": "https://github.com/minimal-studio/request.git.git"
   },
   "author": "Alex",
   "license": "MIT",
