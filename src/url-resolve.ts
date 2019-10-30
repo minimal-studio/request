@@ -3,7 +3,7 @@
 /**
  * 通过hash url的方式把对应的参数传给新打开的页面
  */
-import { HasValue } from 'basic-helper';
+import { HasValue } from '@mini-code/base-func';
 
 export interface UrlParamsRes {
   [targetKey: string]: string;

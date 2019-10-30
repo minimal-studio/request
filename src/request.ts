@@ -1,6 +1,5 @@
 /* eslint-disable no-dupe-class-members */
 /**
- * Lib: Uke Request
  * Author: Alex
  * Desc:
  * 轻松实现以下功能
@@ -15,7 +14,7 @@ import 'whatwg-fetch';
 
 import {
   CallFunc, IsFunc, HasValue, EventEmitterClass, IsObj
-} from 'basic-helper';
+} from '@mini-code/base-func';
 import {
   resolveUrl, urlParamsToQuery,
   ParamEntity
@@ -86,15 +85,17 @@ function arrayFilter(arg: any) {
 }
 
 /**
- * Uke Request 请求对象的构造类
+ * 请求对象的构造类
  *
  * @class RequestClass
  * @extends {EventEmitterClass}
  * @example
  *
- * import { $request } from 'uke-request';
+ * import { RequestClass } from '@mini-code/request';
  *
- * $request.get(url, {
+ * const $R = new RequestClass();
+ *
+ * $R.get(url, {
  *   params: {
  *     ID: 123
  *   }

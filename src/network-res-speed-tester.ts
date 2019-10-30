@@ -4,7 +4,7 @@
 
 import {
   Call, DebounceClass, IsUrl, Random, EventEmitterClass
-} from 'basic-helper';
+} from '@mini-code/base-func';
 import { RequestClass } from './request';
 
 const $request = new RequestClass();

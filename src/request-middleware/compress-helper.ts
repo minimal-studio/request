@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 
 import { LZMA } from 'lzma/src/lzma_worker';
-import { CallFunc } from 'basic-helper';
+import { CallFunc } from '@mini-code/base-func';
 
 function convertFormatedHexToBytes(hex: string) {
   let bytes = [];
