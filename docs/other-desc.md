@@ -1,9 +1,9 @@
-# UKE request 其他模块
+# @mini-code/request 其他模块
 
 ## 测速器
 
 ```js
-import { GateResSpeedTesterClass } from 'uke-request/network-res-speed-tester'
+import { GateResSpeedTesterClass } from '@mini-code/request/network-res-speed-tester'
 
 const gateResSpeedTester = new GateResSpeedTesterClass();
 

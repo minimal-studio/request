@@ -4,7 +4,7 @@ import themeConfig from './docz/theme-config/config';
 
 export default {
   // dest: 'docz-dist',
-  title: 'Uke Request',
+  title: '@mini-code/request',
   description: '通讯加密库',
   indexHtml: 'docz/index.html',
   wrapper: 'docz/wrapper',

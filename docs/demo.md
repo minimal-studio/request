@@ -1,7 +1,9 @@
 # request 的详细使用例子
 
 ```js
-import { $request, RequestClass } from 'uke-request';
+import { RequestClass } from '@mini-code/request';
+
+const $request = new RequestClass();
 
 /**
  *  $request 为内建对象，构造于 RequestClass
@@ -97,7 +99,7 @@ $GH.EventEmitter.subscribe('CHANGE_NETWORK_STATUS', ({state}) => {
 /**
  * 如果是通过 hash URL 的项目
  */
-import {$request, decodeHashUrl} from 'uke-request';
+import {$request, decodeHashUrl} from '@mini-code/request';
 
 /** 第一个参数为需要解析的参数名称，第二个为是否把他序列化为对象
  * 结构
@@ -175,6 +177,6 @@ export {
 重新构建请求对象
 
 ```js
-import {RequestClass} from 'uke-request';
+import {RequestClass} from '@mini-code/request';
 const $request = new RequestClass();
 ```

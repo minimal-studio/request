@@ -1,8 +1,10 @@
 /**
  * 这里是根据具体业务的 filter 函数集
  */
-import {$request, PollClass} from 'uke-request';
-import {getUserInfo, getSessID, onLoginFail} from 'matrix-user-authenticator-actions';
+import { RequestClass } from '@mini-code/request';
+import { getUserInfo, getSessID, onLoginFail } from ".";
+
+const $R = new RequestClass();
 
 function getUserName() {
   return getUserInfo().UserName || window.$GH.GenerteID();
@@ -12,7 +14,7 @@ function getUserName() {
  * 获取全局的请求的 header
  */
 function getCommonHeader() {
-  let reqHeader = {
+  const reqHeader = {
     SessId: getSessID(),
     UserName: getUserName(),
     Platform: window.PLATFORM,
@@ -24,14 +26,14 @@ function getCommonHeader() {
 }
 
 /**
- * 订阅 $request response 事件
+ * 订阅 $R response 事件
  */
-function handleRes({resData, callback}) {
-  let errcode = resData.Header.ErrCode;
+function handleRes({ resData, callback }) {
+  const errcode = resData.Header.ErrCode;
   switch (errcode.Code) {
-    case '30003':
-    case '30024':
-    case '30039':
+    case '1':
+    case '2':
+    case '3':
       // TODO 处理登录错误的业务
       onLoginFail(errcode.Desc);
       break;
@@ -39,39 +41,37 @@ function handleRes({resData, callback}) {
 }
 
 /**
- * $request send data 前的 wrapper 函数
+ * $R send data 前的 wrapper 函数
  */
-$request.wrapDataBeforeSend = (options) => {
-  const {isCompress, method, data, params} = options;
+const before = (options) => {
+  const {
+    isCompress, method, data, params
+  } = options;
   return {
     Header: Object.assign({}, getCommonHeader(data), {
       Compress: isCompress ? 1 : 0,
       Method: method,
     }, params),
     Data: data
-  }
-}
+  };
+};
 
 /**
- * 当 $request 有相应时，返回
+ * 当 $R 有相应时，返回
  */
-$request.setResDataHook = (resData) => {
+const after = (resData) => {
   resData.data = resData.Data || {};
   resData.isCompress = resData.Header.Compress || false;
   return resData;
-}
+};
+
+$R.use([before, after]);
 
 /**
- * 监听 $request res 处理函数
+ * 监听 $R res 处理函数
  */
-$request.subscribeRes(handleRes);
-
-/**
- * 轮询对象的设置
- */
-const PollingEntity = new PollClass(2);
-PollingEntity.setReqObj($request);
+$R.on(handleRes);
 
 export {
-  $request, PollingEntity
+  $R, PollingEntity
 };
