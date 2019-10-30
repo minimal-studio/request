@@ -9,10 +9,11 @@
     "copy-files": "NODE_ENV=production node ./scripts/copy-files-ts.js",
     "docz:dev": "docz dev",
     "docz:build": "NODE_ENV=production docz build",
+    "dev:server": "cd server-for-test; npm run start",
     "test": "jest"
   },
   "peerDependencies": {
-    "@mini-code/base-func": "^3.0.7"
+    "@mini-code/base-func": "^1.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
@@ -24,7 +25,7 @@
     "@typescript-eslint/parser": "^1.9.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "@mini-code/base-func": "^3.0.7",
+    "@mini-code/base-func": "^1.0.1",
     "docz": "^1.2.0",
     "docz-plugin-css": "^0.11.0",
     "docz-plugin-netlify": "^1.1.4",
@@ -44,7 +45,7 @@
     "react-hot-loader": "^4.8.4",
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.3",
-    "ukelli-ui": "^3.1.0-rc2"
+    "@dear-ui/all": "^4.0.0-alpha1"
   },
   "repository": {
     "type": "git",
