@@ -1,9 +1,9 @@
-# Uke Request
+# @mini-code/request
 
 基于 fetch API 的进一步封装, 提供订阅发布与中间件机制。
 
-[![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request)
-[![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request)
+<!-- [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request) -->
+<!-- [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request) -->
 
 ## Basic Usage
 
@@ -12,7 +12,7 @@
 以下事例以 `$R` 指定 `RequestClass` 的实例
 
 ```js
-import { RequestClass } from 'uke-request/request';
+import { RequestClass } from '@mini-code/request';
 
 const $R = new RequestClass();
 
@@ -133,8 +133,8 @@ let postRes = await $R.post('/item-list', data, options);
 通讯加密
 
 ```ts
-import { encrypt, decrypt } from 'uke-request/request-middleware/encrypt-helper';
-import { compress, decompress } from 'uke-request/request-middleware/compress-helper';
+import { encrypt, decrypt } from '@mini-code/request/request-middleware/encrypt-helper';
+import { compress, decompress } from '@mini-code/request/request-middleware/compress-helper';
 
 const encryptKey = '123';
 
@@ -230,14 +230,14 @@ let res = await $R.request({
 
 ## url resolve
 
-`uke-request` 提供，用于解析前端的 `url` 的 `API`
+用于解析前端的 `url` 的 `API`
 
 ```js
 import {
   toBase64Str, fromBase64Str,
   getUrlParams, searchUrlParams, urlParamsToQuery, openWindowUseHashUrl,
   resolveUrl, decodeHashUrl
-} from 'uke-request/url-resolve';
+} from '@mini-code/request/url-resolve';
 ```
 
 ### urlParamsToQuery
