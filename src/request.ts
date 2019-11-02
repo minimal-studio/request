@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 /* eslint-disable no-dupe-class-members */
 /**
  * Author: Alex
@@ -21,45 +22,65 @@ import {
 } from './url-resolve';
 
 export interface RequestConfig {
+  /** 基本请求 url */
   baseUrl?: string;
+  /** 适用于所有请求的共同 header */
   commonHeaders?: HeadersInit;
+  /** 适用于所有请求的 fetchOptions */
   fetchOptions?: RequestInit;
+  /** 超时 */
   timeout?: number;
+  /** 消息响应的事件名，默认为 onRes */
   resMark?: string;
+  /** 消息响应错误的事件名，默认为 onErr */
   errMark?: string;
 }
 
 export type MiddlewareFunc = (data) => any;
 
 export interface MiddlewareOptions {
-  after?: MiddlewareFunc | MiddlewareFunc[];
+  /** 发起请求之前的中间件函数 */
   before?: MiddlewareFunc | MiddlewareFunc[];
+  /** 收到回应之后，返回数据结构之前的中间件函数 */
+  after?: MiddlewareFunc | MiddlewareFunc[];
 }
 
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
 export type RequestSendTypes = 'json' | 'html';
 
 export interface BaseRequestParams {
+  /** 请求的 url，将拼接在 baseUrl 之后 */
   url: string;
+  /** 请求的 http 方法 */
   method?: RequestMethod;
-  // sendType?: RequestSendTypes;
+  /** 当前请求的 data */
   data?: {};
+  /** 当前请求的 headers */
   headers?: {};
+  /** 当前请求的 params，用于封装成 query url */
   params?: ParamEntity;
-  // returnRaw?: boolean;
+  /** 如果当前请求发生错误，则触发的回调 */
   onError?: (event) => void;
 }
 
 export interface RequestParams extends BaseRequestParams {
+  /** 必须传入的 data */
   data: {};
 }
 
 export interface ResData {
   [key: string]: any;
-  /** 如果返回的结果是 string，则挂在在此字段上 */
+  /** 如果返回的结果是 string 类型，则封装在此字段 */
   __text?: string;
-  __originRes?: {};
+  /** 原生的 fetch Request */
   __originReq?: {};
+  /** 原生的 fetch Response */
+  __originRes?: {};
+  /**
+   * 是否发生 http 错误
+   * 由 $R.checkStatus 回调返回
+   * 并且将会触发传入到 request api 中的 onError
+   */
   __err?: string;
 }
 // export type RequestRes = RequestResStruct | RequestResStruct['data'];
@@ -95,7 +116,8 @@ function arrayFilter(arg: any) {
  *
  * const $R = new RequestClass();
  *
- * $R.get(url, {
+ * $R.get({
+ *   url: '/getUrl',
  *   params: {
  *     ID: 123
  *   }
@@ -150,10 +172,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   /**
    * 使用中间件
-   *
-   * @param {MiddlewareOptions | MiddlewareFunc[]} options 如果为数组，则第一个为 before, 第二个为 after
-   *
-   * @memberof RequestClass
    */
   use = (options: MiddlewareOptions | MiddlewareFunc[]) => {
     let before;
@@ -172,7 +190,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 中间件执行器，考虑到可能有异步的中间件，所以使用了递归函数做 async/await 保证执行顺序和返回结果正确
    */
-  execMiddlewares = async (targetData: {}, targetMiddlewares: Function[]) => {
+  private execMiddlewares = async (targetData: {}, targetMiddlewares: Function[]) => {
     if (!targetMiddlewares) return targetData;
     let nextData = IsObj(targetData) ? Object.assign({}, targetData) : targetData;
     const fnRecursive = async (currIdx: number) => {
@@ -191,10 +209,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   /**
    * 设置请求对象的配置
-   *
-   * @param {RequestConfig} config RequestEntity 的配置
-   * @returns {void}
-   * @memberof RequestClass
    */
   setConfig = (config: RequestConfig) => {
     if (!config) return;
@@ -203,9 +217,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   /**
    * 用于广播 response 事件
-   *
-   * @param {object} res request 返回的 res 对象
-   * @memberof RequestClass
    */
   onRes = (res: any) => {
     // 获取完整的 res 对象
@@ -214,9 +225,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   /**
    * 用于广播 error 事件
-   *
-   * @param {object} res request 返回的 res 对象
-   * @memberof RequestClass
    */
   onErr = (res: any) => {
     // 广播消息错误
@@ -225,28 +233,25 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
   /**
    * 可以被重写的状态判断函数
-   *
-   * @returns {boolean}
-   * @memberof RequestClass
    */
   checkStatus = (fetchRes: Response) => true
 
   /**
    * 解析 url, 可以封装
-   *
-   * @param {string} path 路由
-   * @param {object} params 参数
-   * @returns {string}
-   * @memberof RequestClass
    */
   urlFilter = (path: string, params?: ParamEntity) => {
-    if (/https?/.test(path) || /^(\/\/)/.test(path)) return path;
-    let url = this.config.baseUrl;
+    let url;
+    if (/https?/.test(path) || /^(\/\/)/.test(path)) {
+      // return path;
+      url = path;
+    } else {
+      const baseUrl = this.config.baseUrl;
+      url = resolveUrl(baseUrl, path);
+    }
     if (!url) {
       console.log('set $request.setConfig({baseUrl: url}) first');
       return '';
     }
-    url = resolveUrl(url, path);
     if (params) {
       url = urlParamsToQuery({
         url,
@@ -258,15 +263,10 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   }
 
   /**
-   * 上传接口
-   *
-   * @param {object | string} path 路由字符串或者配置
-   * @param {object} data 发送的数据
-   * @returns {void}
-   * @memberof RequestClass
+   * 上传文件
    */
-  upload = (path: string, data: RequestInit["body"]) => {
-    const _url = this.urlFilter(path);
+  upload = (url: string, data: RequestInit["body"]) => {
+    const _url = this.urlFilter(url);
     return fetch(_url, {
       method: 'POST',
       body: data,
@@ -275,62 +275,44 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   }
 
   /**
-   * 发送 POST 请求
-   *
-   * @param {object | string} path 路由字符串或者配置
-   * @param {object} data 发送的数据
-   * @returns {promise}
-   * @memberof RequestClass
+   * 生成 RESTFul Api 的工厂函数
    */
-  post = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
-    url, data, method: 'POST'
-  }))
+  _reqFac = (method: RequestMethod) => <T = DefaultResponseType>(url: string | BaseRequestParams, data?: BaseRequestParams['data'], options?) => {
+    const isStringUrl = typeof url === 'string';
+    return this.request<T>(Object.assign(
+      { method },
+      options,
+      data ? { data } : {},
+      isStringUrl ? { url } : url
+    ));
+  }
 
   /**
-   * 发送 PUT 请求
-   *
-   * @param {object | string} path 路由字符串或者配置
-   * @param {object} data 发送的数据
-   * @returns {promise}
-   * @memberof RequestClass
+   * POST API
    */
-  put = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
-    url, data, method: 'PUT'
-  }))
+  post = this._reqFac('POST')
 
   /**
-   * 发送 DELETE 请求
-   *
-   * @param {object | string} path 路由字符串或者配置
-   * @param {object} data 发送的数据
-   * @returns {promise}
-   * @memberof RequestClass
+   * PUT API
    */
-  del = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options || {}, {
-    url, data, method: 'DELETE'
-  }))
+  put = this._reqFac('PUT')
 
   /**
-   * 发送 PATCH 请求
-   *
-   * @param {object | string} path 路由字符串或者配置
-   * @param {object} data 发送的数据
-   * @returns {promise}
-   * @memberof RequestClass
+   * DELETE API
    */
-  patch = <T = DefaultResponseType>(url, data, options?) => this.request<T>(Object.assign(options, {
-    url, data, method: 'PATCH'
-  }))
+  del = this._reqFac('DELETE')
 
   /**
-   * 发送 Get 请求
-   *
-   * @param {object | string} url URL 字符串或者配置
-   * @param {object} options 配置
-   * @returns  {promise}
-   * @memberof RequestClass
+   * PATCH API
    */
-  async get<T = DefaultResponseType>(url: string | BaseRequestParams, options?: BaseRequestParams) {
+  patch = this._reqFac('PATCH')
+
+  /**
+   * Get API
+   */
+  async get<T = DefaultResponseType>(
+    url: string | BaseRequestParams, options?: BaseRequestParams
+  ) {
     const isStringUrl = typeof url === 'string';
     const reqConfig: BaseRequestParams = Object.assign({}, {
       method: 'GET',
@@ -339,38 +321,16 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     return this.request<T>(reqConfig);
   }
 
-  // /**
-  //  * 请求对象生成器
-  //  *
-  //  * @param {string} method String
-  //  * @returns {promise} 生产的函数
-  //  * @memberof RequestClass
-  //  */
-  // _reqFactory<T = {}>(
-  //   method: RequestMethod
-  // ) {
-  //   return (
-  //     url: string, data: object | string, options = {}
-  //   ) => this.request<T>(Object.assign(options, {
-  //     url, data, method
-  //   }));
-  // }
-
   /**
    * 在请求前 use middleware
    */
   dataFormatFilter = async (data: {}) => {
     const _data = await this.execMiddlewares(data, this.beforeReqMiddlewares);
-    // const sendJSON = IsObj(_data);
-    // const nextData = !sendJSON ? _data : JSON.stringify(_data);
     return _data;
   }
 
   /**
    * 底层请求接口，GET POST DELETE PATCH 的实际接口
-   *
-   * @param {RequestParams} options
-   * @returns {promise} 返回请求的 promise 对象
    */
   request = async <T extends ResData = DefaultResponseType>(
     requestParams: BaseRequestParams
@@ -472,7 +432,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     return resData;
   }
 }
-// const $request = new RequestClass();
 
 export {
   // $request,
