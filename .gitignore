@@ -29,8 +29,6 @@ size.log
 # polyfill.js
 version.txt
 version.js
-package-lock.json
-yarn.lock
 dist
 lib
 
