@@ -1,19 +1,22 @@
 # @mini-code/request
 
-基于 fetch API 的进一步封装, 提供订阅发布与中间件机制。
+基于 fetch API 封装, 提供更友好便捷的 RESTFul 操作。
 
 <!-- [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request) -->
 <!-- [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request) -->
 
+## Install
+
+```shell
+yarn add @mini-code/request
+```
+
 ## Basic Usage
-
-> Support RESTFul
-
-以下事例以 `$R` 指定 `RequestClass` 的实例
 
 ```js
 import { RequestClass } from '@mini-code/request';
 
+// 构造 $R 请求实例
 const $R = new RequestClass();
 
 // 可以为每一个请求对象设置配置
@@ -34,9 +37,9 @@ const delRes = await $R.del('/path', {
 });
 ```
 
-## Adavance Usage
+## Request APIs
 
-### 把 params 转换成 query url
+### [get] API
 
 ```js
 // get, 使用 params 自动转换成对应的 url
@@ -50,16 +53,139 @@ let res = await $R.get({
   },
   isBase64: false // 用于加密 params 的值
 });
+```
 
+### [post, put, del, patch] APIs
+
+#### 使用基本参数
+
+```js
+const postData = {
+  username: 'aaa',
+  password: 'bbb'
+};
+const reqOptions = {
+
+}
+let res = await $R.post('/postUrl', postData, reqOptions);
+let res = await $R.put('/postUrl', postData, reqOptions);
+let res = await $R.del('/postUrl', postData, reqOptions);
+let res = await $R.patch('/postUrl', postData, reqOptions);
+```
+
+reqOptions 参数结构
+
+```ts
+interface RequestParams {
+  /** 当前请求的 headers */
+  headers?: {};
+  /** 把参数 params 中转化成 query url */
+  params?: Map;
+  /** 如果当前请求发生错误，则触发的回调 */
+  onError?: (event) => void;
+}
+const reqOptions: RequestParams = {
+
+}
+```
+
+#### 使用 reqParams 参数
+
+```ts
+// reqParams 数据结构
+interface BaseRequestParams {
+  /** 请求的 url，将拼接在 baseUrl 之后 */
+  url: string;
+  /** 请求的 http 方法 */
+  method?: RequestMethod;
+  /** 当前请求的 data */
+  data?: {};
+  /** 当前请求的 headers */
+  headers?: {};
+  /** 当前请求的 params，用于封装成 query url */
+  params?: ParamEntity;
+  /** 如果当前请求发生错误，则触发的回调 */
+  onError?: (event) => void;
+}
+
+const reqParams: BaseRequestParams = {
+  url: '/postUrl',
+  data: {},
+  headers: {},
+  params: {
+    id: '123'
+  }
+}
+let res = await $R.post(reqParams);
+let res = await $R.put(reqParams);
+let res = await $R.del(reqParams);
+let res = await $R.patch(reqParams);
+```
+
+### [request] API
+
+基础请求 API，上述 API 均为此 API 的封装
+
+```ts
+interface RequestParams {
+  url: string;
+  method?: RequestMethod;
+  data?: {};
+  headers?: {};
+  params?: ParamEntity;
+  onError?: (event) => void;
+}
+
+const requestOptions: RequestParams = {
+  url: '/requestUrl',
+  method: 'POST',
+  data: {},
+  header: FetchHeader,
+  params: {},
+}
+
+// 这样就发起一个 post 请求
+const res = $R.request(requestOptions);
+```
+
+## Response
+
+### 数据结构
+
+所有 request API 都返回统一的 ResData 数据结构
+
+```ts
+interface ResData {
+  /** 由开发者自定义的返回结构 */
+  [key: string]: any;
+  /** 如果返回的结果是 string 类型，则封装在此字段 */
+  __text?: string;
+  /** 原生的 fetch Request */
+  __originReq?: Request;
+  /** 原生的 fetch Response */
+  __originRes?: Response;
+  /** 是否发生 http 错误
+   * 由 $R.checkStatus 回调返回
+   * 并且将会触发传入到 request api 中的 onError
+   */
+  __err?: string;
+}
+
+const res: ResData = $R.post('', data);
+```
+
+### 检查 Response 状态
+
+```js
 // 统一的检查 res status 的状态，如果 return false，则触发 onErr
 $R.checkStatus = (originRes) => {
   return true;
 }
 ```
 
-### 事件订阅
+### 事件 Res 订阅
 
-$R 提供两种订阅事件 `onRes` `onErr`, 并且会响应每个请求都
+如果订阅了 `$R` 提供的事件 `onRes` `onErr`，每次都会触发
 
 ```js
 // 每当有 res 的时候执行
@@ -87,14 +213,14 @@ $R.on('onErr', (resDetail) => {
 
 $R 将根据 checkStatus 返回值判断是否进入错误处理流程, 错误处理流程有两种方式
 
-1. 订阅 `$R.on('onErr', function errHandle() {})`
-2. 为每一个请求订阅的错误回调 `$R.get({ url: '', onError: function errHandle() {} })`
+1. 订阅 `$R.on('onErr', errHandle = () => {})`
+2. 为每一个请求传入 onError 回调 `$R.get({ url: '', onError: errHandle = () => {} })`
 
 注意: __如果传入了 onError 回调，则不执行通过 $R.on('onErr') 订阅的回调__
 
 ```ts
 // override checkStatus
-$R.checkStatus = (fetchRes: Response): boolean => false
+$R.checkStatus = (fetchRes: Response): boolean => fetchRes.status !== 200
 
 // 如果传入了 onError 回调，则不执行通过 $R.on('onErr') 订阅的回调
 $R.get({
@@ -109,12 +235,12 @@ $R.on('onErr', function errHandle(data) {
 })
 ```
 
-### 中间件 Middleware
+## 中间件 Middleware
 
 中间件处理有两个触发时机, 一旦注册，则每次请求都会触发，__并且原来用于提交的 data 将会被中间件返回的值替换__。
 
-1. 请求前 before req
-2. 响应后 after res
+1. `before`: 发起 request 前
+2. `after`: 收到 response 后，返回数据前
 
 ```js
 const before = (reqData) => {
