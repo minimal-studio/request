@@ -29,10 +29,27 @@ import { encrypt, decrypt } from '@mini-code/request/request-middleware/encrypt-
       }
       $R.use([before, after])
       async function getRequest() {
-        const resGet = await $R.get(testUrl + '/test');
-        const resPost = await $R.post(testUrl + '/test');
-        const resDel = await $R.del(testUrl + '/test');
-        const resPut = await $R.put(testUrl + '/test');
+        const resGet = await $R.get(testUrl + '/test?method=get');
+        const resPost = await $R.post({
+          url: testUrl + '/test',
+          params: {
+            method: 'post'
+          },
+          data: {
+            username: 'alex',
+            password: '123'
+          }
+        });
+        const resDel = await $R.del(testUrl + '/test', {
+          delID: '456'
+        }, {
+          params: {
+            method: 'del'
+          }
+        });
+        const resPut = await $R.put(testUrl + '/test?method=put', {
+          updateID: '123'
+        });
         setRes({
           resGet,
           resPost,
@@ -45,12 +62,15 @@ import { encrypt, decrypt } from '@mini-code/request/request-middleware/encrypt-
         <div>
           {
             requestRes ? (
-              <code>
-                <pre>get res: {JSON.stringify(requestRes.resGet)}</pre>
-                <pre>post res: {JSON.stringify(requestRes.resPost)}</pre>
-                <pre>delete res: {JSON.stringify(requestRes.resDel)}</pre>
-                <pre>put res: {JSON.stringify(requestRes.resPut)}</pre>
-              </code>
+              <div>
+                <div>get res: {JSON.stringify(requestRes.resGet)}</div>
+                <hr />
+                <div>post res: {JSON.stringify(requestRes.resPost)}</div>
+                <hr />
+                <div>delete res: {JSON.stringify(requestRes.resDel)}</div>
+                <hr />
+                <div>put res: {JSON.stringify(requestRes.resPut)}</div>
+              </div>
             ) : (
               <div>
                 如果没有数据，则需要在 server-for-test 目录下启动测试服务

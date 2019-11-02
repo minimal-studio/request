@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["es2015", "es2017", "dom"],
     "sourceMap": false,
     "noImplicitAny": false,
     "outDir": "./dist",
