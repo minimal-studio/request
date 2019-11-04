@@ -2,9 +2,6 @@
 
 基于 fetch API 封装, 提供更友好便捷的 RESTFul 操作。
 
-<!-- [![Build Status](https://travis-ci.com/SANGET/uke-request.svg?branch=master)](https://travis-ci.com/SANGET/uke-request) -->
-<!-- [![install size](https://packagephobia.now.sh/badge?p=uke-request)](https://packagephobia.now.sh/result?p=uke-request) -->
-
 ## Install
 
 ```shell
