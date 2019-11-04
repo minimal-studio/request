@@ -8,7 +8,6 @@
     "build": "NODE_ENV=production docz build"
   },
   "devDependencies": {
-    "@dear-ui/all": "^4.0.0-alpha1",
     "@mini-code/base-func": "^1.0.2",
     "@types/react": "^16.8.17",
     "@types/react-dom": "^16.8.4",
