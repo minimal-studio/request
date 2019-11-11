@@ -81,7 +81,7 @@ export interface ResData extends ResDataBase {
 }
 
 export type MiddlewareFuncBefore = (reqData: RequestParams) => any;
-export type MiddlewareFuncAfter = (resData: ResDataBase, reqData: RequestParams) => any;
+export type MiddlewareFuncAfter = (resData: ResDataBase, resDataBase: ResDataBase) => any;
 
 export interface MiddlewareOptions {
   /** 发起请求之前的中间件函数 */
