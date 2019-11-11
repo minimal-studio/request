@@ -59,14 +59,15 @@ export interface RequestParams extends BaseRequestParams {
   data: {};
 }
 
-export interface ResData {
-  [key: string]: any;
+export interface ResDataBase {
   /** 如果返回的结果是 string 类型，则封装在此字段 */
   __text?: string;
   /** 原生的 fetch Request */
   __originReq?: {};
   /** 原生的 fetch Response */
   __originRes?: {};
+  /** 原生请求 body */
+  __reqBody?: {};
   /**
    * 是否发生 http 错误
    * 由 $R.checkStatus 回调返回
@@ -75,8 +76,12 @@ export interface ResData {
   __err?: string;
 }
 
+export interface ResData extends ResDataBase {
+  [key: string]: any;
+}
+
 export type MiddlewareFuncBefore = (reqData: RequestParams) => any;
-export type MiddlewareFuncAfter = (resData, reqData: RequestParams) => any;
+export type MiddlewareFuncAfter = (resData: ResDataBase, reqData: RequestParams) => any;
 
 export interface MiddlewareOptions {
   /** 发起请求之前的中间件函数 */
