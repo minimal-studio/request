@@ -36,15 +36,6 @@ export interface RequestConfig {
   errMark?: string;
 }
 
-export type MiddlewareFunc = (data) => any;
-
-export interface MiddlewareOptions {
-  /** 发起请求之前的中间件函数 */
-  before?: MiddlewareFunc | MiddlewareFunc[];
-  /** 收到回应之后，返回数据结构之前的中间件函数 */
-  after?: MiddlewareFunc | MiddlewareFunc[];
-}
-
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
 export type RequestSendTypes = 'json' | 'html';
 
@@ -82,6 +73,16 @@ export interface ResData {
    * 并且将会触发传入到 request api 中的 onError
    */
   __err?: string;
+}
+
+export type MiddlewareFuncBefore = (reqData: RequestParams) => any;
+export type MiddlewareFuncAfter = (resData, reqData: RequestParams) => any;
+
+export interface MiddlewareOptions {
+  /** 发起请求之前的中间件函数 */
+  before?: MiddlewareFuncBefore | MiddlewareFuncBefore[];
+  /** 收到回应之后，返回数据结构之前的中间件函数 */
+  after?: MiddlewareFuncAfter | MiddlewareFuncAfter[];
 }
 // export type RequestRes = RequestResStruct | RequestResStruct['data'];
 
@@ -132,9 +133,9 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     errMark: 'onErr',
   };
 
-  afterResMiddlewares: MiddlewareFunc[] = [];
+  beforeReqMiddlewares: MiddlewareFuncBefore[] = [];
 
-  beforeReqMiddlewares: MiddlewareFunc[] = [];
+  afterResMiddlewares: MiddlewareFuncAfter[] = [];
 
   constructor(config?: RequestConfig) {
     super();
@@ -142,20 +143,10 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     if (config) this.setConfig(config);
   }
 
-  resPipe(pipeFunc?: MiddlewareFunc) {
-    console.log('resPipe will be deprecated, call "request.use({ after: fn })"');
-    this.use([null, pipeFunc]);
-  }
-
-  reqPipe(pipeFunc: MiddlewareFunc) {
-    console.log('reqPipe will be deprecated, call "request.use({ before: fn })"');
-    this.use([pipeFunc]);
-  }
-
   /**
    * 在发请求前执行的 middleware
    */
-  useBefore = (fn: MiddlewareFunc | MiddlewareFunc[]) => {
+  useBefore = (fn: MiddlewareFuncBefore | MiddlewareFuncBefore[]) => {
     this.use({
       before: fn
     });
@@ -164,7 +155,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 在发请求前执行的 middleware
    */
-  useAfter = (fn: MiddlewareFunc | MiddlewareFunc[]) => {
+  useAfter = (fn: MiddlewareFuncAfter | MiddlewareFuncAfter[]) => {
     this.use({
       after: fn
     });
@@ -173,9 +164,9 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 使用中间件
    */
-  use = (options: MiddlewareOptions | MiddlewareFunc[]) => {
-    let before;
-    let after;
+  use = (options: MiddlewareOptions | [MiddlewareFuncBefore, MiddlewareFuncAfter]) => {
+    let before: MiddlewareFuncBefore | MiddlewareFuncBefore[];
+    let after: MiddlewareFuncAfter | MiddlewareFuncAfter[];
     if (Array.isArray(options)) {
       before = options[0];
       after = options[1];
@@ -188,17 +179,21 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   }
 
   /**
-   * 中间件执行器，考虑到可能有异步的中间件，所以使用了递归函数做 async/await 保证执行顺序和返回结果正确
+   * 中间件执行器
    */
-  private execMiddlewares = async (targetData: {}, targetMiddlewares: Function[]) => {
-    if (!targetMiddlewares) return targetData;
+  private execMiddlewares = async (targetMiddlewares: Function[], targetData, extraData?) => {
+    if (!targetMiddlewares) {
+      // 如果没有使用中间件，则直接返回数据
+      return targetData;
+    }
     let nextData = IsObj(targetData) ? Object.assign({}, targetData) : targetData;
     const fnRecursive = async (currIdx: number) => {
       if (currIdx < targetMiddlewares.length) {
         const nextIdx = currIdx + 1;
         const middleware = targetMiddlewares[currIdx];
         if (IsFunc(middleware)) {
-          nextData = await middleware(nextData);
+          // 考虑到可能有异步的中间件，所以使用了递归函数做 async/await 保证执行顺序和返回结果正确
+          nextData = await middleware(nextData, extraData);
         }
         fnRecursive(nextIdx);
       }
@@ -325,7 +320,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
    * 在请求前 use middleware
    */
   dataFormatFilter = async (data: {}) => {
-    const _data = await this.execMiddlewares(data, this.beforeReqMiddlewares);
+    const _data = await this.execMiddlewares(this.beforeReqMiddlewares, data);
     return _data;
   }
 
@@ -399,13 +394,16 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
         };
       }
 
-      resData = await this.execMiddlewares(resData, this.afterResMiddlewares);
-
-      Object.assign(resData, {
+      const resDataBase = {
         __originRes: fetchRes,
         __originReq: fetchOptions,
         __err: null
-      });
+      };
+
+      resData = await this.execMiddlewares(this.afterResMiddlewares, resData, resDataBase);
+
+      /** 合并由中间件返回的数据 */
+      Object.assign(resData, resDataBase);
 
       /**
        * 2. 尝试对 res 进行 status 判定
