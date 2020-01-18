@@ -347,10 +347,9 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
 
     /** 如果是 GET 请求，则不需要 body */
     let bodyData = null;
-    let body;
+    const body = await this.dataFormatFilter(data);
     let _headers;
     if (!isGet) {
-      body = await this.dataFormatFilter(data);
       const isStringData = typeof body === 'string';
       bodyData = {
         body: isStringData ? body : JSON.stringify(body)
