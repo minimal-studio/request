@@ -1,13 +1,13 @@
 {
   "name": "@mini-code/request",
-  "version": "1.0.0-rc1.0",
+  "version": "1.0.0-rc1.1",
   "description": "基于 fetch API 的 HTTP 请求封装，内置中间件（内置 RC4 数据加解密、LZMA 数据压解缩中间件）机制、RESTFul API 支持。",
   "scripts": {
     "publish": "npm publish ./dist --access public",
     "release": "npm run build:ts; npm run publish",
     "build:ts": "rm -rf ./dist; tsc; npm run copy-files",
     "copy-files": "NODE_ENV=production node ./scripts/copy-files-ts.js",
-    "doc:dev": "cd website; yarn; yarn dev",
+    "start": "cd website; yarn; yarn dev",
     "build": "cd website; yarn; yarn build",
     "dev:server": "cd server-for-test; npm i; npm run start",
     "test": "jest"
