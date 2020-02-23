@@ -16,9 +16,9 @@ describe('Testing RESTFul', () => {
     const setFPHeader = async (data) => {
       const fingerprint = await getClientFingerprint();
       $R.setConfig({
-        commonHeaders: {
-          FP: fingerprint
-        }
+        // commonHeaders: {
+        //   FP: fingerprint
+        // }
       });
       return data;
     };

@@ -11,8 +11,6 @@
  * 4. 封装每次请求的 abort 操作
  */
 
-import 'whatwg-fetch';
-
 import {
   CallFunc, IsFunc, HasValue, EventEmitterClass, IsObj
 } from '@mini-code/base-func';
@@ -138,6 +136,8 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     errMark: 'onErr',
   };
 
+  private ready = false;
+
   beforeReqMiddlewares: MiddlewareFuncBefore[] = [];
 
   afterResMiddlewares: MiddlewareFuncAfter[] = [];
@@ -146,6 +146,19 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     super();
 
     if (config) this.setConfig(config);
+    this.checkFetch();
+  }
+
+  checkFetch = () => {
+    if (window.fetch) {
+      import('whatwg-fetch')
+        .then(() => {
+          this.ready = true;
+          this.emit('__LOAD_POLYFILL__', true);
+        });
+    } else {
+      this.ready = true;
+    }
   }
 
   /**
@@ -330,9 +343,25 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   }
 
   /**
-   * 底层请求接口，GET POST DELETE PATCH 的实际接口
+   * request 代理
    */
   request = async <T extends ResData = DefaultResponseType>(
+    requestParams: BaseRequestParams
+  ): Promise<T & ResData> => {
+    if (!this.ready) {
+      return new Promise((resolve) => {
+        this.on('__LOAD_POLYFILL__', () => {
+          this._request<T>(requestParams).then((res) => resolve(res));
+        });
+      });
+    }
+    return this._request<T>(requestParams);
+  }
+
+  /**
+   * 底层请求接口，GET POST DELETE PATCH 的实际接口
+   */
+  _request = async <T extends ResData = DefaultResponseType>(
     requestParams: BaseRequestParams
   ): Promise<T & ResData> => {
     const {
@@ -409,7 +438,9 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       resData = await this.execMiddlewares(this.afterResMiddlewares, resData, resDataBase);
 
       /** 合并由中间件返回的数据 */
-      Object.assign(resData, resDataBase);
+      // Object.assign(resData, resDataBase);
+      // resData.prototype = resDataBase;
+      Object.setPrototypeOf(resData, resDataBase);
 
       /**
        * 2. 尝试对 res 进行 status 判定
@@ -432,7 +463,6 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       resData.__err = e;
     }
 
-    // return returnRaw ? result : result.data;
     return resData;
   }
 }
