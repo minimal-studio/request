@@ -1,6 +1,6 @@
 {
   "name": "@mini-code/request",
-  "version": "1.0.0-rc1.1",
+  "version": "1.0.0",
   "description": "基于 fetch API 的 HTTP 请求封装，内置中间件（内置 RC4 数据加解密、LZMA 数据压解缩中间件）机制、RESTFul API 支持。",
   "scripts": {
     "publish": "npm publish ./dist --access public",
@@ -19,14 +19,14 @@
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.5",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@mini-code/base-func": "^1.0.2",
     "@babel/preset-env": "^7.0.0",
+    "@mini-code/base-func": "^1.0.2",
     "@types/jest": "^24.0.13",
     "@typescript-eslint/eslint-plugin": "^2.4.0",
     "@typescript-eslint/parser": "^2.4.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "eslint": "^6.6.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-loader": "^2.1.1",
     "eslint-plugin-import": "^2.14.0",
@@ -34,7 +34,7 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "fs-extra": "^8.1.0",
-    "jest": "^23.6.0",
+    "jest": "^25.1.0",
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.3"
   },

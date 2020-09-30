@@ -5,9 +5,6 @@
  */
 import { HasValue } from '@mini-code/base-func';
 
-export interface UrlParamsRes {
-  [targetKey: string]: string;
-}
 
 /**
  * 把字符串转换成 base64
@@ -38,17 +35,35 @@ export function fromBase64Str(str: string) {
   return res;
 }
 
+interface GetUrlParamsOptions {
+  /** 需要获取的 key */
+  target?: string;
+  /** 解析的 href，默认是 localhost.href */
+  href?: string;
+  /** 是否需要从 base64 格式转换 */
+  fromBase64?: boolean;
+}
+
+
+export interface UrlParamsRes {
+  [targetKey: string]: string;
+}
+
+export type UrlParams<T> =
+  T extends string ? string : UrlParamsRes
+
+export function getUrlSearchParams(options: { target }): string
+export function getUrlSearchParams(options?: GetUrlParamsOptions): UrlParamsRes
 /**
  * 解析并获取浏览器路由的参数
- *
- * @param {string | undefined} targetKey 需要获取的值的 key, 例如 id=123, 此时为 id
- * @param {string} href 需要获取的字符串，默认为 window.location.href
- * @param {boolean} fromBase64 是否 base64 的字符串
- * @returns {string | object} 返回获取的结果
+ * @returns {string} 返回获取的结果
  */
-export function getUrlParams(
-  targetKey?: string, href?: string, fromBase64?: boolean
-): string | object {
+export function getUrlSearchParams(
+  options?: GetUrlParamsOptions
+) {
+  const {
+    target, href, fromBase64
+  } = options;
   const _href = href || (window ? window.location.href : '');
   if (!_href) {
     return {};
@@ -60,6 +75,7 @@ export function getUrlParams(
     const params = searchs.split(/&+/);
     let parentKey: string | null = null;
     params.forEach((item) => {
+      // eslint-disable-next-line prefer-const
       let [key, val] = item.split('=');
       if (!key) return;
       if (fromBase64) val = fromBase64Str(val);
@@ -72,7 +88,18 @@ export function getUrlParams(
       resultObj[key] = val;
     });
   }
-  return targetKey ? resultObj[targetKey] : resultObj;
+  if (target) {
+    return resultObj[target];
+  }
+  return resultObj;
+}
+
+export function getUrlParams(target?, href?, fromBase64?) {
+  return getUrlSearchParams({
+    target,
+    href,
+    fromBase64
+  });
 }
 
 /**
