@@ -49,10 +49,7 @@ export interface UrlParamsRes {
   [targetKey: string]: string;
 }
 
-export type UrlParams<T> =
-  T extends string ? string : UrlParamsRes
-
-export function getUrlSearchParams(options: { target }): string
+export function getUrlSearchParams(options: { target } & GetUrlParamsOptions): string
 export function getUrlSearchParams(options?: GetUrlParamsOptions): UrlParamsRes
 /**
  * 解析并获取浏览器路由的参数
