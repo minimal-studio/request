@@ -37,7 +37,7 @@ export interface RequestConfig {
 export type RequestMethod = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
 export type RequestSendTypes = 'json' | 'html';
 
-export interface BaseRequestParams {
+export interface BaseRequestParams<O = any> {
   /** 请求的 url，将拼接在 baseUrl 之后 */
   url: string;
   /** 请求的 http 方法 */
@@ -48,6 +48,8 @@ export interface BaseRequestParams {
   headers?: {};
   /** 当前请求的 params，用于封装成 query url */
   params?: ParamEntity;
+  /** options */
+  options?: O;
   /** 如果当前请求发生错误，则触发的回调 */
   onError?: (event) => void;
 }
@@ -128,7 +130,7 @@ function arrayFilter(arg: any) {
  * })
  *
  */
-class RequestClass<DefaultResponseType extends ResData = ResData> extends EventEmitterClass {
+class RequestClass<DefaultResponseType extends ResData = ResData, ReqOptions = any> extends EventEmitterClass {
   config: RequestConfig = {
     baseUrl: '',
     timeout: 10 * 1000,
@@ -223,7 +225,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 设置请求对象的配置
    */
-  setConfig = (config: RequestConfig) => {
+  readonly setConfig = (config: RequestConfig) => {
     if (!config) return;
     Object.assign(this.config, config);
   }
@@ -231,15 +233,15 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 用于广播 response 事件
    */
-  onRes = (res: any) => {
+  readonly onRes = (res: any, resDetail) => {
     // 获取完整的 res 对象
-    this.emit(this.config.resMark, res);
+    this.emit(this.config.resMark, { res, resDetail });
   }
 
   /**
    * 用于广播 error 事件
    */
-  onErr = (res: any) => {
+  readonly onErr = (res: any) => {
     // 广播消息错误
     this.emit(this.config.errMark, res);
   }
@@ -290,14 +292,19 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
   /**
    * 生成 RESTFul Api 的工厂函数
    */
-  _reqFac = (method: RequestMethod) => <T = DefaultResponseType>(url: string | BaseRequestParams, data?: BaseRequestParams['data'], options?) => {
-    const isStringUrl = typeof url === 'string';
-    return this.request<T>(Object.assign(
+  _reqFac = (method: RequestMethod) => <T = DefaultResponseType>(
+    url: string | BaseRequestParams<ReqOptions>,
+    data?: BaseRequestParams['data'],
+    options?: ReqOptions
+  ) => {
+    const urlOptions = typeof url === 'string' ? { url } : url;
+    const requestParams = Object.assign(
       { method },
-      options,
+      options || {},
       data ? { data } : {},
-      isStringUrl ? { url } : url
-    ));
+      urlOptions
+    );
+    return this.request<T>(requestParams);
   }
 
   /**
@@ -324,7 +331,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
    * Get API
    */
   async get<T = DefaultResponseType>(
-    url: string | BaseRequestParams, options?: BaseRequestParams
+    url: string | BaseRequestParams, options?: BaseRequestParams<ReqOptions>
   ) {
     const isStringUrl = typeof url === 'string';
     const reqConfig: BaseRequestParams = Object.assign({}, {
@@ -346,7 +353,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
    * request 代理
    */
   request = async <T extends ResData = DefaultResponseType>(
-    requestParams: BaseRequestParams
+    requestParams: BaseRequestParams<ReqOptions>
   ): Promise<T & ResData> => {
     if (!this.ready) {
       return new Promise((resolve) => {
@@ -358,11 +365,14 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
     return this._request<T>(requestParams);
   }
 
+  // async _request<ResData>(requestParams: BaseRequestParams): Promise<ResData>
+
+
   /**
    * 底层请求接口，GET POST DELETE PATCH 的实际接口
    */
-  _request = async <T extends ResData = DefaultResponseType>(
-    requestParams: BaseRequestParams
+  _request = async <T>(
+    requestParams: BaseRequestParams<ReqOptions>
   ): Promise<T & ResData> => {
     const {
       url, params, data,
@@ -370,7 +380,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
       // sendType = 'json',
       // returnRaw = false,
       onError = this.onErr,
-      ...other
+      options,
     } = requestParams;
     const isGet = method === 'GET';
 
@@ -397,7 +407,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
         headers: Object.assign({}, _headers, this.config.commonHeaders, headers),
       },
       this.config.fetchOptions,
-      other,
+      options,
       bodyData
     );
     // console.log(bodyData, method)
@@ -456,7 +466,7 @@ class RequestClass<DefaultResponseType extends ResData = ResData> extends EventE
         // return returnRaw ? checkFailRes : checkFailRes.data;
       }
 
-      this.onRes(resData);
+      this.onRes(resData, resDataBase);
     } catch (e) {
       onError(e);
 
